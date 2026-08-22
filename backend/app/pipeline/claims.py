@@ -15,7 +15,9 @@ GURU_CLAIM_RE = re.compile(
 )
 REHAT_RE = re.compile(r"\b(rehat|maryada|khalsa|amrit|kes|kesh|kirpan|kangha|kara|kachera|5\s*k)\b", re.IGNORECASE)
 DOCTRINE_RE = re.compile(
-    r"\b(rituals?|mukti|liberation|salvation|naam|nam simran|hukam|pilgrimage|tirath|nitnem|janeu|karam\s*kand)\b",
+    r"\b(rituals?|mukti|liberation|salvation|naam|nam simran|hukam|pilgrimage|tirath|"
+    r"nitnem|janeu|karam\s*kand|idol|murti|formless|nirankar|physical\s+form|"
+    r"worshipped|worship)\b",
     re.IGNORECASE,
 )
 HISTORY_RE = re.compile(

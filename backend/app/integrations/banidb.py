@@ -102,9 +102,11 @@ class BaniDBClient:
 
     async def search_fuzzy(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Search unicode Gurmukhi, then rank by fuzzy similarity."""
-        results = await self.search(query, searchtype=1, results=max(limit * 2, 10))
+        if any("\u0A00" <= ch <= "\u0A7F" for ch in query):
+            results = await self.search(query, searchtype=2, results=max(limit * 2, 10))
+        else:
+            results = await self.search(query, searchtype=3, results=max(limit * 2, 10))
         if not results:
-            # First-letter style fallback for romanized-ish queries
             ascii_q = "".join(ch for ch in query.lower() if ch.isalpha())
             if len(ascii_q) >= 3:
                 results = await self.search(ascii_q[:12], searchtype=2, results=max(limit * 2, 10))
@@ -118,6 +120,23 @@ class BaniDBClient:
             )
             item = {**item, "score": round(score / 100.0, 3)}
             ranked.append((score, item))
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        return [item for _, item in ranked[:limit]]
+
+    def _has_gurmukhi(self, text: str) -> bool:
+        return any("\u0A00" <= ch <= "\u0A7F" for ch in text)
+
+    async def search_for_claim(self, query: str, *, searchtype: int, limit: int = 5) -> list[dict[str, Any]]:
+        """Search Gurmukhi (type 2) or English translation (type 3) and attach a match score."""
+        results = await self.search(query, searchtype=searchtype, results=max(limit * 2, 8))
+        ranked: list[tuple[float, dict[str, Any]]] = []
+        for item in results:
+            haystack = f"{item.get('excerpt') or ''} {item.get('translation') or ''}"
+            score = max(
+                fuzz.partial_ratio(query, haystack),
+                fuzz.token_set_ratio(query, haystack),
+            )
+            ranked.append((score, {**item, "score": round(max(score / 100.0, 0.35), 3), "match_reason": "scripture_topic"}))
         ranked.sort(key=lambda x: x[0], reverse=True)
         return [item for _, item in ranked[:limit]]
 

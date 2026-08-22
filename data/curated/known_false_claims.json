@@ -224,6 +224,19 @@
       "explanation": "Guru Nanak rejected the janeu as a mark of spiritual rank. Caste purity rites are not the Sikh path.",
       "correction": "Sikh teaching rejects caste ritual-purity as the way to God.",
       "source_refs": ["theo:caste-ritual-purity", "rehat:no-caste"]
+    },
+    {
+      "id": "kf-027",
+      "claim_pattern": "Sikhi teaches that God can only be worshipped in one specific physical form",
+      "aliases": [
+        "God in Sikhism must be worshipped as a particular idol or image",
+        "Sikh teaching confines Waheguru to one bodily form",
+        "Gurbani says God has only one physical form to worship"
+      ],
+      "category": "doctrine",
+      "explanation": "Sikh teaching names God as Ik Onkar and Nirankar (the One, without form). Confining worship to one physical murti or bodily form contradicts Gurbani.",
+      "correction": "Sikhi does not teach that God can only be worshipped in one specific physical form. Devotion is to the formless One through Naam and the Guru Granth Sahib.",
+      "source_refs": ["theo:nirankar-not-one-form", "theo:idol-and-form", "rehat:no-idol"]
     }
   ]
 }

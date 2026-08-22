@@ -151,18 +151,39 @@ async def test_ritual_claim_pipeline_false_without_llm():
     assert "1430" not in joined
 
 
+def test_scripture_queries_for_form_claim():
+    from app.pipeline.gurbani_topics import scripture_queries_for
+
+    qs = scripture_queries_for(
+        "Sikhi teaches that God can only be worshipped in one specific physical form."
+    )
+    labels = {q.query for q in qs}
+    assert "formless" in labels or "form" in labels
+    assert any(q.searchtype == 3 for q in qs)
+
+
+@pytest.mark.asyncio
+async def test_form_claim_false_without_llm():
+    text = "Sikhi teaches that God can only be worshipped in one specific physical form."
+    claim = ExtractedClaim(text=text, category=_infer_category(text))
+    assert claim.category == "doctrine"
+    evidence = await retrieve_evidence(claim)
+    assert evidence
+    assert any(e.get("source") == "Known False Claims Index" for e in evidence)
+    verdict = _heuristic_verify(claim, evidence)
+    assert verdict.verdict == "false"
+
+
 def test_golden_set_shapes():
     path = ROOT / "data" / "golden" / "golden_set.json"
     data = json.loads(path.read_text())
     assert len(data["examples"]) >= 8
     for ex in data["examples"]:
         claim = ExtractedClaim(text=ex["text"], category="other")
-        # Smoke the heuristic verifier with KB evidence
         kb = KnowledgeBase()
         kb.load(force=True)
         evidence = kb.match_known_false(ex["text"]) + kb.search(ex["text"], limit=3)
         verdict = _heuristic_verify(claim, evidence)
         if ex["type"] != "true_control":
-            # For known misinfo patterns we expect false/misleading when matched
             if evidence and evidence[0].get("source") == "Known False Claims Index":
                 assert verdict.verdict in ex["expected_verdict"]

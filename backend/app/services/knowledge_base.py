@@ -46,7 +46,8 @@ SYNONYM_GROUPS: list[set[str]] = [
     {"langar", "seva"},
     {"british", "colonial", "colonisers", "colonizers"},
     {"hindu", "sect"},
-    {"idol", "murti", "statue"},
+    {"form", "forms", "formless", "physical", "nirankar", "shapeless", "image",
+     "idol", "idols", "murti", "statue", "salagram", "saalagraam"},
     {"women", "woman", "gender"},
     {"nitnem", "paath", "path"},
 ]

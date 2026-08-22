@@ -106,8 +106,10 @@ def _heuristic_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
         )
 
     known = [e for e in on_topic if e.get("source") == "Known False Claims Index"]
+    gurbani_hits = [e for e in on_topic if e.get("source") in {"BaniDB", "GurbaniNow"}]
     if known:
         meta = known[0].get("meta") or {}
+        cited = known[:1] + gurbani_hits[:3]
         return ClaimVerdict(
             claim_text=claim.text,
             category=claim.category,
@@ -117,10 +119,8 @@ def _heuristic_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
             summary=meta.get("explanation")
             or "This claim matches a known misinformation pattern in the curated index.",
             correction=meta.get("correction"),
-            evidence=[_to_evidence_item(e) for e in known[:2]],
+            evidence=[_to_evidence_item(e) for e in cited],
         )
-
-    gurbani_hits = [e for e in on_topic if e.get("source") in {"BaniDB", "GurbaniNow"}]
     quote = (claim.quoted_gurbani or "").strip()
     if quote and gurbani_hits:
         best = max(gurbani_hits, key=lambda e: fuzz.partial_ratio(quote, e.get("excerpt") or ""))
@@ -186,7 +186,13 @@ def _on_topic_evidence(claim: ExtractedClaim, evidence: list[dict[str, Any]]) ->
         if item.get("source") == "Known False Claims Index":
             kept.append(item)
             continue
-        blob = f"{item.get('reference', '')} {item.get('excerpt', '')} {item.get('category', '')}"
+        if item.get("match_reason") == "scripture_topic" and item.get("source") in {"BaniDB", "GurbaniNow"}:
+            kept.append(item)
+            continue
+        blob = (
+            f"{item.get('reference', '')} {item.get('excerpt', '')} "
+            f"{item.get('translation', '')} {item.get('category', '')}"
+        )
         distinctive, _ratio = topical_overlap(query, blob)
         score = item.get("score")
         if distinctive >= 2:
@@ -202,6 +208,7 @@ def _to_evidence_item(raw: dict[str, Any]) -> EvidenceItem:
         source=str(raw.get("source") or "unknown"),
         reference=str(raw.get("reference") or ""),
         excerpt=str(raw.get("excerpt") or "")[:800],
+        translation=(str(raw["translation"])[:600] if raw.get("translation") else None),
         url=raw.get("url"),
         score=raw.get("score"),
     )

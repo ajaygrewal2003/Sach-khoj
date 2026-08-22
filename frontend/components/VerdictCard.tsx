@@ -33,7 +33,8 @@ export function VerdictCard({ claim }: { claim: Claim }) {
               <summary>
                 {ev.source} · {ev.reference}
               </summary>
-              <p>{ev.excerpt}</p>
+              <p style={{ fontSize: "1.08rem" }}>{ev.excerpt}</p>
+              {ev.translation ? <p className="muted">{ev.translation}</p> : null}
               {ev.url ? (
                 <p>
                   <a href={ev.url} target="_blank" rel="noreferrer">

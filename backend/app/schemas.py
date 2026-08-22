@@ -29,6 +29,7 @@ class EvidenceItem(BaseModel):
     source: str
     reference: str
     excerpt: str
+    translation: str | None = None
     url: str | None = None
     score: float | None = None
 

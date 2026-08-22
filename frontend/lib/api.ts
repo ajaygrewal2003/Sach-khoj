@@ -3,6 +3,7 @@ export type EvidenceItem = {
   source: string;
   reference: string;
   excerpt: string;
+  translation?: string | null;
   url?: string | null;
   score?: number | null;
 };
