@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.pipeline.relevance import (
+    SKIP_AS_SOLO_QUERY,
+    ClaimBrief,
+    analyze_claim,
     claim_focus_tokens,
     has_gurmukhi,
     is_usable_search_query,
-    understand_claim_subject,
 )
-from app.services.knowledge_base import expand_tokens
+from app.services.knowledge_base import core_subject_tokens, expand_tokens
 
 # BaniDB: searchtype 2 ≈ Gurmukhi word, searchtype 3 ≈ English translation.
 # Queries must be short; never send a full English sentence or filler word to the API.
@@ -236,22 +238,36 @@ def scripture_queries_for(claim_text: str) -> list[ScriptureQuery]:
         for q in TOKEN_QUERIES.get(tok, ()):
             add(q, 3, f"token:{tok}")
 
+    # Unknown / novel claims: search distinctive nouns that actually appear in the claim.
+    if not queries:
+        raw = core_subject_tokens(claim_text) - SKIP_AS_SOLO_QUERY
+        for tok in sorted(raw, key=lambda t: (-len(t), t)):
+            if len(tok) < 5:
+                continue
+            add(tok, 3, "focus")
+            if len(queries) >= 4:
+                break
+
     return queries[:6]
 
 
-async def scripture_queries_for_claim(claim_text: str) -> list[ScriptureQuery]:
+async def scripture_queries_for_claim(
+    claim_text: str,
+    brief: ClaimBrief | None = None,
+) -> list[ScriptureQuery]:
     """Understand the claim, then merge heuristic + LLM Gurbani search terms."""
-    focus = claim_focus_tokens(claim_text)
+    focus = (brief.focus_tokens if brief else None) or claim_focus_tokens(claim_text)
     queries = list(scripture_queries_for(claim_text))
     seen = {(q.query.lower(), q.searchtype) for q in queries}
 
-    understood = await understand_claim_subject(claim_text)
-    if understood.get("gurbani_relevant") is False and not queries:
+    understood = brief or await analyze_claim(claim_text)
+    if understood.gurbani_relevant is False and not queries:
         return []
 
     def add(query: str, searchtype: int, topic: str) -> None:
         query = (query or "").strip()
-        if not is_usable_search_query(query, claim_focus=focus, require_focus=True):
+        # LLM may propose valid synonyms that are not in the claim wording.
+        if not is_usable_search_query(query, claim_focus=focus, require_focus=False):
             return
         key = (query.lower(), searchtype)
         if key in seen:
@@ -259,7 +275,7 @@ async def scripture_queries_for_claim(claim_text: str) -> list[ScriptureQuery]:
         seen.add(key)
         queries.append(ScriptureQuery(query=query, searchtype=searchtype, topic=topic))
 
-    for item in understood.get("queries") or []:
+    for item in understood.llm_queries:
         q = (item.get("q") or "").strip()
         lang = (item.get("lang") or "en").lower()
         if not q or len(q.split()) > 3:

@@ -47,8 +47,8 @@ Rules:
 - Do not claim Panthic authority; frame as research-assisted assessment.
 Summary and correction requirements:
 - summary MUST be 4–8 sentences (about 120–220 words). Do not write a one-liner.
-- Quote Gurbani only when a retrieved verse is about the SAME subject as the claim (diet/meat, caste, formless God, etc.).
-- If a verse only shares a filler word (completely, totally, Lord, saved, fulfilled, comforted), ignore it completely — do not mention its Ang or quote it.
+- Quote Gurbani only when a retrieved verse is about the SAME subject as the claim — for whatever the claim is about (diet, caste, formless God, gender, Rehat, history, a quoted Ang, or a novel topic).
+- If a verse only shares a filler word (completely, totally, Lord, saved, fulfilled, comforted) or uses a word in a different sense, ignore it completely — do not mention its Ang or quote it.
 - Prefer curated Rehat/history notes over off-topic Gurbani. It is better to cite no verse than the wrong verse.
 - When an on-topic BaniDB/GurbaniNow verse is present, weave it in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
 - Use only Gurmukhi, translations, and Ang numbers that appear in the retrieved evidence. Never invent verses.
@@ -85,6 +85,26 @@ async def chat_json(
         return json.loads(content)
     except Exception as exc:  # noqa: BLE001
         logger.warning("LLM call failed: %s", exc)
+        return None
+
+
+async def embed_texts(texts: list[str]) -> list[list[float]] | None:
+    """Embed strings for semantic verse ranking. None if LLM/embeddings are unavailable."""
+    settings = get_settings()
+    if not settings.llm_enabled:
+        return None
+    cleaned = [(t or "").strip()[:2000] or " " for t in texts]
+    if not cleaned:
+        return None
+    try:
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
+        resp = await client.embeddings.create(model=settings.openai_embed_model, input=cleaned)
+        ordered = sorted(resp.data, key=lambda row: row.index)
+        return [list(row.embedding) for row in ordered]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Embedding call failed: %s", exc)
         return None
 
 

@@ -12,6 +12,7 @@ from app.database import SessionLocal
 from app.models import Case, CaseStatus, Claim, ReviewStatus, VerdictLabel
 from app.pipeline.claims import extract_claims
 from app.pipeline.ingest import ingest_submission
+from app.pipeline.relevance import analyze_claim
 from app.pipeline.retrieve import retrieve_evidence
 from app.pipeline.verify import verify_claim
 
@@ -83,16 +84,19 @@ async def _process(session: AsyncSession, case: Case) -> None:
 
     verdicts = []
     for i, claim in enumerate(claims):
-        evidence = await retrieve_evidence(claim)
+        brief = await analyze_claim(claim.text)
+        evidence = await retrieve_evidence(claim, brief=brief)
         log.append(
             {
                 "stage": "retrieve",
                 "claim_index": i,
+                "subject": brief.subject,
+                "gurbani_relevant": brief.gurbani_relevant,
                 "evidence_count": len(evidence),
                 "sources": sorted({e.get("source") for e in evidence if e.get("source")}),
             }
         )
-        verdict = await verify_claim(claim, evidence)
+        verdict = await verify_claim(claim, evidence, brief=brief)
         verdicts.append(verdict)
         case.claims.append(
             Claim(

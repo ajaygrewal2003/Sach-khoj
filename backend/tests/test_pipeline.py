@@ -178,6 +178,16 @@ def test_scripture_queries_for_many_claim_types():
     assert "lord" not in meat_labels
     assert any("meat" in q.query.lower() or "flesh" in q.query.lower() or q.query == "ਮਾਸ" for q in meat_qs)
 
+    caste_qs = {q.query.lower() for q in scripture_queries_for("Sikhi completely rejects the caste system.")}
+    assert "completely" not in caste_qs
+    assert any("caste" in q for q in caste_qs)
+
+    novel = scripture_queries_for("Sikhism forbids dancing at weddings.")
+    novel_labels = {q.query.lower() for q in novel}
+    assert "forbids" not in novel_labels
+    assert novel, "novel claims should still search their distinctive nouns"
+    assert any("danc" in q or "wedding" in q for q in novel_labels)
+
 
 def test_off_topic_gurbani_is_dropped():
     from app.pipeline.retrieve import _score_scripture_against_claim
@@ -243,6 +253,18 @@ def test_filler_search_terms_rejected():
     assert not verse_matches_claim(
         "Sikhi completely forbids eating meat.",
         translation="The framework is made up of bones, flesh and veins; the poor soul-bird dwells within it.",
+    )
+    assert verse_matches_claim(
+        "Sikhi completely rejects the caste system.",
+        translation="There is no caste in the world hereafter.",
+    )
+    assert not verse_matches_claim(
+        "Sikhi completely rejects the caste system.",
+        translation="My Lord and Master Himself has saved me completely.",
+    )
+    assert verse_matches_claim(
+        "Sikhi teaches that God can only be worshipped in one specific physical form.",
+        translation="The Lord is formless; He has no form or feature.",
     )
 
 

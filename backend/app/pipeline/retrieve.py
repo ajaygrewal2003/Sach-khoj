@@ -7,9 +7,12 @@ from app.integrations.banidb import BaniDBClient
 from app.integrations.gurbaninow import GurbaniNowClient
 from app.pipeline.gurbani_topics import scripture_queries_for_claim
 from app.pipeline.relevance import (
+    ClaimBrief,
+    analyze_claim,
     claim_focus_tokens,
     filter_verses_for_claim,
     judge_verses_for_claim,
+    rerank_verses_semantically,
     verse_matches_claim,
 )
 from app.schemas import ExtractedClaim
@@ -49,10 +52,14 @@ def _score_scripture_against_claim(claim_text: str, item: dict[str, Any]) -> dic
     return {**item, "score": round(score, 3), "match_reason": "scripture_topic"}
 
 
-async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
+async def retrieve_evidence(
+    claim: ExtractedClaim,
+    brief: ClaimBrief | None = None,
+) -> list[dict[str, Any]]:
     """Stage 3 — gather grounded passages only (no invented citations)."""
     evidence: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
+    brief = brief or await analyze_claim(claim.text)
 
     def add_many(items: list[dict[str, Any]], *, min_score: float | None = MIN_KEEP_SCORE) -> None:
         for item in items:
@@ -83,8 +90,8 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
     banidb = BaniDBClient()
     gnow = GurbaniNowClient()
 
-    # Search Gurbani using subject queries only — never the full claim sentence.
-    for sq in await scripture_queries_for_claim(claim.text):
+    # Search Gurbani using the understood subject — never the full claim sentence.
+    for sq in await scripture_queries_for_claim(claim.text, brief=brief):
         hits = await banidb.search_for_claim(sq.query, searchtype=sq.searchtype, limit=4)
         scored = [_score_scripture_against_claim(claim.text, h) for h in hits]
         add_many([h for h in scored if h is not None], min_score=0.28)
@@ -137,7 +144,8 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
     ]
     topical = filter_verses_for_claim(claim.text, topical)
     topical.sort(key=lambda e: float(e.get("score") or 0.0), reverse=True)
-    topical = await judge_verses_for_claim(claim.text, topical[:8])
+    topical = await rerank_verses_semantically(claim.text, topical[:8], brief)
+    topical = await judge_verses_for_claim(claim.text, topical, brief)
     evidence = rest + named[:4] + topical[:3]
 
     def _rank_key(e: dict[str, Any]) -> tuple[int, float]:

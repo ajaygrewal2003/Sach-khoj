@@ -4,20 +4,28 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
-from app.pipeline.relevance import verse_matches_claim
+from app.pipeline.relevance import ClaimBrief, verse_matches_claim
 from app.schemas import ClaimVerdict, EvidenceItem, ExtractedClaim, VerdictType
 from app.services.llm import VERDICT_SCHEMA_HINT, chat_json
 
 
-async def verify_claim(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> ClaimVerdict:
+async def verify_claim(
+    claim: ExtractedClaim,
+    evidence: list[dict[str, Any]],
+    brief: ClaimBrief | None = None,
+) -> ClaimVerdict:
     """Stage 4 — produce structured verdict grounded only in retrieved evidence."""
-    llm_verdict = await _llm_verify(claim, evidence)
+    llm_verdict = await _llm_verify(claim, evidence, brief)
     if llm_verdict:
         return llm_verdict
     return _heuristic_verify(claim, evidence)
 
 
-async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> ClaimVerdict | None:
+async def _llm_verify(
+    claim: ExtractedClaim,
+    evidence: list[dict[str, Any]],
+    brief: ClaimBrief | None = None,
+) -> ClaimVerdict | None:
     on_topic = _on_topic_evidence(claim, evidence)
     if not on_topic:
         return ClaimVerdict(
@@ -49,6 +57,7 @@ async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
         "If a passage is off-topic (different subject), do not cite it and do not quote it. "
         "Never quote a verse just because it contains a filler word from the claim "
         "(completely, totally, forbids, Lord, saved, fulfilled). "
+        "This applies to every kind of claim, not one topic. "
         "Write a teaching-style explanation using only on-topic retrieved Gurbani. "
         "If no on-topic Gurbani was retrieved, explain from curated Rehat/history notes and say so. "
         + VERDICT_SCHEMA_HINT
@@ -56,6 +65,7 @@ async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
     user = (
         f"Claim category: {claim.category}\n"
         f"Claim: {claim.text}\n"
+        f"{brief.prompt_block() if brief else ''}\n"
         f"Quoted gurbani (if any): {claim.quoted_gurbani}\n\n"
         f"Retrieved evidence (cite only by id, and quote Gurbani from these rows only):\n{compact}\n\n"
         "Write the summary so a reader understands the claim from on-topic sources. "
