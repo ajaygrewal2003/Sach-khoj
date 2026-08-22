@@ -12,6 +12,7 @@ ClaimCategory = Literal[
     "out_of_context",
     "historical",
     "rehat",
+    "doctrine",
     "propaganda",
     "other",
 ]

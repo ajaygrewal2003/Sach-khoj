@@ -14,10 +14,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.config import get_settings
 from app.database import init_db
 from app.main import app
-from app.pipeline.claims import extract_claims
+from app.pipeline.claims import extract_claims, _infer_category
+from app.pipeline.retrieve import retrieve_evidence
 from app.pipeline.verify import _heuristic_verify
 from app.schemas import ExtractedClaim
-from app.services.knowledge_base import KnowledgeBase
+from app.services.knowledge_base import KnowledgeBase, reset_knowledge_base
 
 
 @pytest.fixture(autouse=True)
@@ -29,11 +30,13 @@ def _test_env(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{db_path}")
     monkeypatch.setenv("CURATED_DATA_DIR", str(curated))
     monkeypatch.setenv("UPLOAD_DIR", str(upload))
-    monkeypatch.setenv("OPENAI_API_KEY", "")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-disabled")
     monkeypatch.setenv("ADMIN_TOKEN", "test-admin")
     get_settings.cache_clear()
+    reset_knowledge_base()
     yield
     get_settings.cache_clear()
+    reset_knowledge_base()
 
 
 @pytest.mark.asyncio
@@ -110,6 +113,42 @@ def test_knowledge_base_known_false():
     hits = kb.match_known_false("The British created the Khalsa identity")
     assert hits
     assert hits[0]["source"] == "Known False Claims Index"
+
+
+def test_ritual_claim_retrieval_is_on_topic():
+    kb = KnowledgeBase()
+    kb.load(force=True)
+    claim = "Sikhi teaches that rituals alone can guarantee spiritual liberation."
+    known = kb.match_known_false(claim)
+    assert known, "ritual liberation claim should hit the known-false index"
+    assert "ritual" in (known[0]["excerpt"] + known[0]["meta"]["claim_pattern"]).lower()
+
+    hits = kb.search(claim, limit=5)
+    refs = " ".join(h["reference"].lower() for h in hits)
+    texts = " ".join(h["excerpt"].lower() for h in hits)
+    blob = refs + " " + texts
+    assert "mukti" in blob or "ritual" in blob or "naam" in blob
+    assert "women in sikh" not in blob
+    assert "ang numbering" not in blob
+    assert "caste hierarchy" not in blob or "ritual" in blob
+
+
+@pytest.mark.asyncio
+async def test_ritual_claim_pipeline_false_without_llm():
+    claim = ExtractedClaim(
+        text="Sikhi teaches that rituals alone can guarantee spiritual liberation.",
+        category=_infer_category("Sikhi teaches that rituals alone can guarantee spiritual liberation."),
+    )
+    assert claim.category == "doctrine"
+    evidence = await retrieve_evidence(claim)
+    assert evidence
+    assert any(e.get("source") == "Known False Claims Index" for e in evidence)
+    verdict = _heuristic_verify(claim, evidence)
+    assert verdict.verdict == "false"
+    assert verdict.evidence
+    joined = " ".join(e.excerpt.lower() for e in verdict.evidence)
+    assert "women in sikh" not in joined
+    assert "1430" not in joined
 
 
 def test_golden_set_shapes():

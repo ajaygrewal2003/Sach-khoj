@@ -175,6 +175,55 @@
       "explanation": "Edited overlays often insert fabricated lines while using sacred imagery for credibility.",
       "correction": "Always OCR/transcribe and verify overlays against BaniDB before trusting meme posts.",
       "source_refs": ["gurbani:no-hate", "gurbani:attribution"]
+    },
+    {
+      "id": "kf-023",
+      "claim_pattern": "Sikhi teaches that rituals alone can guarantee spiritual liberation",
+      "aliases": [
+        "Rituals alone guarantee mukti in Sikhism",
+        "Performing ceremonies is enough for salvation according to Gurbani",
+        "Sikhism says outer rituals grant liberation automatically"
+      ],
+      "category": "doctrine",
+      "explanation": "Guru Nanak Dev Ji criticised empty ritualism. Mukti is not sold by ceremonies; Naam, Hukam, ethical living, and Guru's grace are central.",
+      "correction": "Sikhi does not teach that rituals alone guarantee liberation. Outer rites without Naam and transformation of the mind are not a sufficient path to mukti.",
+      "source_refs": ["theo:rituals-not-mukti", "theo:japji-hukam", "theo:naam-kirat-vand"]
+    },
+    {
+      "id": "kf-024",
+      "claim_pattern": "Bathing at a pilgrimage site or holy river automatically washes sins and grants mukti in Sikhism",
+      "aliases": [
+        "Tirath bathing guarantees salvation",
+        "A holy dip washes all sins according to Gurbani"
+      ],
+      "category": "doctrine",
+      "explanation": "Gurbani turns tirath inward: cleansing ego from the mind. A river bath is not taught as an automatic ticket to liberation.",
+      "correction": "Pilgrimage bathing is not an automatic guarantee of mukti in Sikh teaching; inner transformation is what Gurbani emphasises.",
+      "source_refs": ["theo:inner-tirath", "theo:rituals-not-mukti"]
+    },
+    {
+      "id": "kf-025",
+      "claim_pattern": "Doing Nitnem or taking Amrit automatically guarantees heaven no matter how one lives",
+      "aliases": [
+        "Paath is a magic charm for salvation",
+        "Amrit ceremony alone saves you regardless of conduct"
+      ],
+      "category": "doctrine",
+      "explanation": "Nitnem and Amrit are discipline and commitment, not a charm that overrides hukam, naam, and ethical life.",
+      "correction": "Rehat practices are spiritual discipline, not a vending-machine guarantee of heaven.",
+      "source_refs": ["theo:nitnem-discipline", "rehat:bani"]
+    },
+    {
+      "id": "kf-026",
+      "claim_pattern": "Wearing a janeu or performing priestly purity rituals is required for Sikh liberation",
+      "aliases": [
+        "Guru Nanak taught the sacred thread as the path to God",
+        "Caste purity rituals grant mukti in Sikhi"
+      ],
+      "category": "doctrine",
+      "explanation": "Guru Nanak rejected the janeu as a mark of spiritual rank. Caste purity rites are not the Sikh path.",
+      "correction": "Sikh teaching rejects caste ritual-purity as the way to God.",
+      "source_refs": ["theo:caste-ritual-purity", "rehat:no-caste"]
     }
   ]
 }

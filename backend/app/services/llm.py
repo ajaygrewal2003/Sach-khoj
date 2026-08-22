@@ -16,7 +16,7 @@ Return ONLY valid JSON matching:
   "claims": [
     {
       "text": "atomic checkable claim",
-      "category": "gurbani_misquote|out_of_context|historical|rehat|propaganda|other",
+      "category": "gurbani_misquote|out_of_context|historical|rehat|doctrine|propaganda|other",
       "quoted_gurbani": "optional Gurmukhi or romanized verse snippet or null"
     }
   ]
@@ -24,6 +24,7 @@ Return ONLY valid JSON matching:
 Rules:
 - Split mixed posts into separate verifiable factual claims.
 - Skip pure opinion unless it asserts a false factual premise.
+- Prefer category doctrine for teachings about Naam, mukti, rituals, Hukam, pilgrimage, or Rehat-as-salvation claims.
 - Prefer category gurbani_misquote when a verse/Ang/Guru attribution is asserted.
 - Prefer out_of_context when a real-looking verse is used with misleading framing.
 """
@@ -39,8 +40,9 @@ Return ONLY valid JSON matching:
 }
 Rules:
 - You MUST only cite evidence_ids that appear in the provided evidence list.
-- If evidence is insufficient, use unverified and never invent citations.
-- Every false/misleading/true verdict MUST include at least one evidence_id.
+- Cite a passage only if it is about the same topic as the claim. Off-topic passages (wrong subject) are not evidence.
+- If evidence is insufficient or off-topic, use unverified, set evidence_ids to [], and set correction to null. Never guess from model memory.
+- Every false/misleading/true verdict MUST include at least one on-topic evidence_id.
 - Distinguish wrong quote vs quote exists but framing is misleading (misleading).
 - Do not claim Panthic authority; frame as research-assisted assessment.
 """

@@ -36,6 +36,14 @@
       "tags": ["gurbani", "dasam granth"],
       "reference": "Dasam Granth vs Guru Granth Sahib",
       "excerpt": "Guru Granth Sahib is the eternal Guru for Sikhs. Debates about Dasam Granth composition exist in scholarship and community discourse; posts that invent verses and casually label them 'Guru Granth Sahib Ang X' without matching BaniDB should be marked false or unverified."
+    },
+    {
+      "id": "gurbani:karam-kand",
+      "category": "gurbani",
+      "tags": ["gurbani", "ritual", "karam", "mukti"],
+      "keywords": ["karam kand", "empty ritual", "outer show", "hypocrisy", "naam"],
+      "reference": "Gurbani on karam kand (empty ritual)",
+      "excerpt": "Gurbani criticises karam kand: outer religious show, priestcraft, and ritual performed without Naam. Verses on pilgrimage, fasting, and purity often redirect the seeker to the mind, ego, and remembrance of Ik Onkar rather than guaranteeing mukti through the rite itself."
     }
   ]
 }

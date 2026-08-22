@@ -14,6 +14,10 @@ GURU_CLAIM_RE = re.compile(
     re.IGNORECASE,
 )
 REHAT_RE = re.compile(r"\b(rehat|maryada|khalsa|amrit|kes|kesh|kirpan|kangha|kara|kachera|5\s*k)\b", re.IGNORECASE)
+DOCTRINE_RE = re.compile(
+    r"\b(rituals?|mukti|liberation|salvation|naam|nam simran|hukam|pilgrimage|tirath|nitnem|janeu|karam\s*kand)\b",
+    re.IGNORECASE,
+)
 HISTORY_RE = re.compile(
     r"\b(was\s+born|founded|invented|never\s+existed|converted\s+to|british\s+created|"
     r"1947|1984|operation\s+blue\s+star|panjab|punjab)\b",
@@ -90,6 +94,8 @@ def _looks_checkable(text: str) -> bool:
         return True
     if REHAT_RE.search(text) or HISTORY_RE.search(text):
         return True
+    if DOCTRINE_RE.search(text):
+        return True
     # Assertive factual phrasing
     return bool(re.search(r"\b(said|wrote|teaches|proves|means|is\s+from|quotes?)\b", text, re.I))
 
@@ -97,6 +103,8 @@ def _looks_checkable(text: str) -> bool:
 def _infer_category(text: str) -> ClaimCategory:
     if GURMUKHI_RE.search(text) or ANG_RE.search(text) or re.search(r"\b(misquot|fabricat|fake\s+shabad)\b", text, re.I):
         return "gurbani_misquote"
+    if DOCTRINE_RE.search(text):
+        return "doctrine"
     if REHAT_RE.search(text):
         return "rehat"
     if HISTORY_RE.search(text) or GURU_CLAIM_RE.search(text):
@@ -112,6 +120,7 @@ def _normalize_category(value: Any) -> ClaimCategory:
         "out_of_context",
         "historical",
         "rehat",
+        "doctrine",
         "propaganda",
         "other",
     }

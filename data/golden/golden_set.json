@@ -59,6 +59,18 @@
       "type": "propaganda",
       "text": "Kirpan is proof that Sikhism mandates attacking civilians.",
       "expected_verdict": ["false", "misleading"]
+    },
+    {
+      "id": "d01",
+      "type": "doctrine",
+      "text": "Sikhi teaches that rituals alone can guarantee spiritual liberation.",
+      "expected_verdict": ["false", "misleading"]
+    },
+    {
+      "id": "d02",
+      "type": "doctrine",
+      "text": "Bathing at a holy river automatically washes sins and grants mukti in Sikhism.",
+      "expected_verdict": ["false", "misleading"]
     }
   ]
 }

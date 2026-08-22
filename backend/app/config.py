@@ -3,9 +3,16 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_BACKEND_DIR = Path(__file__).resolve().parents[1]
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(_BACKEND_DIR / ".env", ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+        env_ignore_empty=True,
+    )
 
     app_name: str = "Sach Khoj"
     app_description: str = "Evidence-grounded Sikhism & Gurbani misinformation validation"
@@ -36,7 +43,10 @@ class Settings(BaseSettings):
 
     @property
     def llm_enabled(self) -> bool:
-        return bool(self.openai_api_key.strip())
+        key = self.openai_api_key.strip()
+        if not key or key.lower() in {"test-disabled", "none", "disabled"}:
+            return False
+        return True
 
 
 @lru_cache
