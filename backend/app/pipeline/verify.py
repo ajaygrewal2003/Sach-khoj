@@ -160,7 +160,16 @@ def _heuristic_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
                 evidence=[_to_evidence_item(best)],
             )
 
-    top = on_topic[:3]
+    top: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in gurbani_hits + on_topic:
+        eid = str(item.get("id") or "")
+        if eid in seen:
+            continue
+        seen.add(eid)
+        top.append(item)
+        if len(top) >= 4:
+            break
     return ClaimVerdict(
         claim_text=claim.text,
         category=claim.category,

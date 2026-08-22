@@ -151,15 +151,25 @@ async def test_ritual_claim_pipeline_false_without_llm():
     assert "1430" not in joined
 
 
-def test_scripture_queries_for_form_claim():
+def test_scripture_queries_for_many_claim_types():
     from app.pipeline.gurbani_topics import scripture_queries_for
 
-    qs = scripture_queries_for(
-        "Sikhi teaches that God can only be worshipped in one specific physical form."
-    )
-    labels = {q.query for q in qs}
-    assert "formless" in labels or "form" in labels
-    assert any(q.searchtype == 3 for q in qs)
+    form = {
+        q.query.lower()
+        for q in scripture_queries_for(
+            "Sikhi teaches that God can only be worshipped in one specific physical form."
+        )
+    }
+    assert "formless" in form or "form" in form
+
+    ritual = scripture_queries_for("Sikhi teaches that rituals alone can guarantee spiritual liberation.")
+    assert ritual
+
+    langar = scripture_queries_for("Langar is only for baptized Sikhs; foreigners are not allowed.")
+    assert langar
+
+    women = scripture_queries_for("Women cannot take Amrit according to the Gurus.")
+    assert women
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ from typing import Any
 
 from app.integrations.banidb import BaniDBClient
 from app.integrations.gurbaninow import GurbaniNowClient
-from app.pipeline.gurbani_topics import scripture_queries_for
+from app.pipeline.gurbani_topics import scripture_queries_for_claim
 from app.schemas import ExtractedClaim
 from app.services.knowledge_base import get_knowledge_base, topical_overlap
 
@@ -70,8 +70,8 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
     banidb = BaniDBClient()
     gnow = GurbaniNowClient()
 
-    # Topic-mapped Gurbani search (short queries only) — used for doctrine as well as quotes.
-    for sq in scripture_queries_for(claim.text):
+    # For every claim, try on-topic Gurbani (short queries only — never the full sentence).
+    for sq in await scripture_queries_for_claim(claim.text):
         hits = await banidb.search_for_claim(sq.query, searchtype=sq.searchtype, limit=4)
         scored = [_score_scripture_against_claim(claim.text, h) for h in hits]
         add_many([h for h in scored if h is not None], min_score=0.28)
