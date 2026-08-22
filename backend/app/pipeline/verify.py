@@ -4,6 +4,7 @@ from typing import Any
 
 from rapidfuzz import fuzz
 
+from app.pipeline.relevance import verse_matches_claim
 from app.schemas import ClaimVerdict, EvidenceItem, ExtractedClaim, VerdictType
 from app.services.llm import VERDICT_SCHEMA_HINT, chat_json
 
@@ -45,9 +46,11 @@ async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
         "You are an evidence-grounded assistant helping researchers check claims about Sikhism and Gurbani. "
         "Never invent Ang numbers, shabad IDs, or quotations. "
         "A passage is usable only if it is about the SAME topic as the claim. "
-        "If a passage is off-topic (different subject), do not cite it. "
-        "Write a teaching-style explanation: walk through the retrieved Gurbani in your own words, "
-        "quoting the verse, then saying what it means for this claim. "
+        "If a passage is off-topic (different subject), do not cite it and do not quote it. "
+        "Never quote a verse just because it contains a filler word from the claim "
+        "(completely, totally, forbids, Lord, saved, fulfilled). "
+        "Write a teaching-style explanation using only on-topic retrieved Gurbani. "
+        "If no on-topic Gurbani was retrieved, explain from curated Rehat/history notes and say so. "
         + VERDICT_SCHEMA_HINT
     )
     user = (
@@ -55,8 +58,8 @@ async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
         f"Claim: {claim.text}\n"
         f"Quoted gurbani (if any): {claim.quoted_gurbani}\n\n"
         f"Retrieved evidence (cite only by id, and quote Gurbani from these rows only):\n{compact}\n\n"
-        "Write the summary so a reader understands the claim using the Gurbani above, "
-        "not a one-sentence restatement of the claim."
+        "Write the summary so a reader understands the claim from on-topic sources. "
+        "Quote Gurbani only when the verse is about this claim's subject."
     )
     data = await chat_json(system, user, max_tokens=1800)
     if not data:
@@ -82,8 +85,21 @@ async def _llm_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
             correction = None
 
     cited_dicts = [e for e in on_topic if e.get("id") in set(cited_ids)] or on_topic[:4]
+    on_topic_gurbani = [
+        e
+        for e in on_topic
+        if e.get("source") in {"BaniDB", "GurbaniNow"}
+        and (
+            e.get("match_reason") in {"named_ang", "quoted_scripture"}
+            or verse_matches_claim(
+                claim.text,
+                translation=str(e.get("translation") or ""),
+                excerpt=str(e.get("excerpt") or ""),
+            )
+        )
+    ]
     if not any(e.get("source") in {"BaniDB", "GurbaniNow"} for e in cited_dicts):
-        cited_dicts = cited_dicts + [e for e in on_topic if e.get("source") in {"BaniDB", "GurbaniNow"}][:3]
+        cited_dicts = cited_dicts + [e for e in on_topic_gurbani if e not in cited_dicts][:2]
     summary = _ensure_gurbani_in_explanation(claim.text, summary, cited_dicts, verdict)
     for extra in cited_dicts:
         if extra.get("source") in {"BaniDB", "GurbaniNow"} and extra.get("id") not in {
@@ -212,11 +228,18 @@ def _heuristic_verify(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> 
     )
 
 
-def _gurbani_quote_lines(items: list[dict[str, Any]], *, limit: int = 3) -> list[str]:
+def _gurbani_quote_lines(items: list[dict[str, Any]], claim_text: str, *, limit: int = 3) -> list[str]:
     lines: list[str] = []
     for item in items:
         if item.get("source") not in {"BaniDB", "GurbaniNow"}:
             continue
+        if item.get("match_reason") not in {"named_ang", "quoted_scripture"}:
+            if not verse_matches_claim(
+                claim_text,
+                translation=str(item.get("translation") or ""),
+                excerpt=str(item.get("excerpt") or ""),
+            ):
+                continue
         ref = item.get("reference") or "Gurbani"
         gurmukhi = (item.get("excerpt") or "").strip()
         translation = (item.get("translation") or "").strip()
@@ -242,7 +265,7 @@ def _ensure_gurbani_in_explanation(
 ) -> str:
     """If the write-up is thin or ignores retrieved verses, weave them in."""
     summary = (summary or "").strip()
-    quotes = _gurbani_quote_lines(evidence)
+    quotes = _gurbani_quote_lines(evidence, claim_text)
     if not quotes:
         return summary
 
@@ -279,8 +302,16 @@ def _on_topic_evidence(claim: ExtractedClaim, evidence: list[dict[str, Any]]) ->
         if item.get("source") == "Known False Claims Index":
             kept.append(item)
             continue
-        if item.get("match_reason") == "scripture_topic" and item.get("source") in {"BaniDB", "GurbaniNow"}:
-            kept.append(item)
+        if item.get("source") in {"BaniDB", "GurbaniNow"}:
+            if item.get("match_reason") in {"named_ang", "quoted_scripture"}:
+                kept.append(item)
+                continue
+            if verse_matches_claim(
+                claim.text,
+                translation=str(item.get("translation") or ""),
+                excerpt=str(item.get("excerpt") or ""),
+            ):
+                kept.append(item)
             continue
         blob = (
             f"{item.get('reference', '')} {item.get('excerpt', '')} "

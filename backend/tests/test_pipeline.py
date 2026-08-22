@@ -175,7 +175,8 @@ def test_scripture_queries_for_many_claim_types():
     meat_labels = {q.query.lower() for q in meat_qs}
     assert "completely" not in meat_labels
     assert "forbids" not in meat_labels
-    assert any("meat" in q.query.lower() or "flesh" in q.query.lower() for q in meat_qs)
+    assert "lord" not in meat_labels
+    assert any("meat" in q.query.lower() or "flesh" in q.query.lower() or q.query == "ਮਾਸ" for q in meat_qs)
 
 
 def test_off_topic_gurbani_is_dropped():
@@ -214,6 +215,78 @@ def test_off_topic_gurbani_is_dropped():
     assert "education" not in hits[0]["meta"]["claim_pattern"].lower()
 
 
+def test_filler_search_terms_rejected():
+    from app.pipeline.relevance import (
+        claim_focus_tokens,
+        is_filler_query,
+        is_usable_search_query,
+        verse_matches_claim,
+    )
+
+    focus = claim_focus_tokens("Sikhi completely forbids eating meat.")
+    assert "meat" in focus
+    assert "completely" not in focus
+    assert is_filler_query("completely")
+    assert is_filler_query("forbids")
+    assert is_filler_query("Lord")
+    assert not is_usable_search_query("completely", claim_focus=focus)
+    assert is_usable_search_query("eat meat", claim_focus=focus)
+    assert is_usable_search_query("flesh", claim_focus=focus)
+    assert verse_matches_claim(
+        "Sikhi completely forbids eating meat.",
+        translation="Some eat meat, while others eat grass.",
+    )
+    assert not verse_matches_claim(
+        "Sikhi completely forbids eating meat.",
+        translation="says Nanak, I was totally, completely fulfilled.",
+    )
+    assert not verse_matches_claim(
+        "Sikhi completely forbids eating meat.",
+        translation="The framework is made up of bones, flesh and veins; the poor soul-bird dwells within it.",
+    )
+
+
+def test_verifier_ignores_filler_gurbani():
+    from app.pipeline.verify import _heuristic_verify
+
+    claim_text = "Sikhi completely forbids eating meat."
+    claim = ExtractedClaim(text=claim_text, category="doctrine")
+    kb = KnowledgeBase()
+    kb.load(force=True)
+    known = kb.match_known_false(claim_text)
+    assert known
+    junk = {
+        "id": "banidb:x:133",
+        "source": "BaniDB",
+        "match_reason": "scripture_topic",
+        "reference": "Ang 133",
+        "excerpt": "ਸਭ ਛਡਾਈ ਖਸਮਿ ਆਪਿ ਹਰਿ ਜਪਿ ਭਈ ਠਰੂਰੇ ॥੬॥",
+        "translation": (
+            "My Lord and Master Himself has saved me completely; "
+            "I am comforted by meditating on the Lord."
+        ),
+        "score": 0.9,
+    }
+    good = {
+        "id": "banidb:x:144",
+        "source": "BaniDB",
+        "match_reason": "scripture_topic",
+        "reference": "Ang 144",
+        "excerpt": "ਇਕਿ ਮਾਸਹਾਰੀ",
+        "translation": "Some eat meat, while others eat grass.",
+        "score": 0.8,
+    }
+    verdict = _heuristic_verify(claim, known + [junk, good])
+    blob = f"{verdict.summary} {verdict.correction or ''} " + " ".join(
+        f"{e.reference} {e.translation or ''} {e.excerpt}" for e in verdict.evidence
+    )
+    assert "Ang 133" not in blob
+    assert "saved me completely" not in blob.lower()
+    assert "completely fulfilled" not in blob.lower()
+    assert "Ang 144" in blob
+    assert "meat" in blob.lower()
+
+
 @pytest.mark.asyncio
 async def test_form_claim_false_without_llm():
     text = "Sikhi teaches that God can only be worshipped in one specific physical form."
@@ -246,6 +319,19 @@ def test_explanation_weaves_in_gurbani():
     assert "Ang 141" in text
     assert "honest living" in text.lower()
     assert "ਪਹਿਲਾ ਸਚੁ" in text
+
+
+def test_banidb_english_hits_require_whole_words():
+    from app.integrations.banidb import BaniDBClient
+
+    client = BaniDBClient()
+    meat_line = "Some eat meat, while others eat grass."
+    filler = "My Lord and Master Himself has saved me completely; I am comforted by meditating on the Lord."
+    assert client._english_query_hits("eat meat", meat_line)
+    assert client._english_query_hits("flesh", "Do not desire the flesh.")
+    assert not client._english_query_hits("eat meat", filler)
+    assert not client._english_query_hits("flesh", filler)
+    assert not client._english_query_hits("completely", meat_line)
 
 
 def test_golden_set_shapes():

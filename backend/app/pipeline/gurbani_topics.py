@@ -2,50 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.services.knowledge_base import content_tokens, expand_tokens
-from app.services.llm import chat_json
+from app.pipeline.relevance import (
+    claim_focus_tokens,
+    has_gurmukhi,
+    is_usable_search_query,
+    understand_claim_subject,
+)
+from app.services.knowledge_base import expand_tokens
 
 # BaniDB: searchtype 2 ≈ Gurmukhi word, searchtype 3 ≈ English translation.
-# Queries must be short; never send a full English sentence to the API.
-
-GENERIC_TOKENS = {
-    "sikh",
-    "sikhi",
-    "sikhism",
-    "sikhs",
-    "teach",
-    "teaches",
-    "teaching",
-    "taught",
-    "claim",
-    "claims",
-    "people",
-    "person",
-    "religion",
-    "religious",
-    "specific",
-    "according",
-    "says",
-    "said",
-    "must",
-    "only",
-    "true",
-    "false",
-    "always",
-    "never",
-    "everyone",
-    "anyone",
-    "completely",
-    "totally",
-    "entirely",
-    "fully",
-    "forbids",
-    "forbid",
-    "forbidden",
-    "prohibits",
-    "emphasize",
-    "emphasizes",
-}
+# Queries must be short; never send a full English sentence or filler word to the API.
 
 
 @dataclass(frozen=True)
@@ -82,15 +48,13 @@ TOPICS: tuple[TopicSpec, ...] = (
                 "worship",
                 "worshipped",
                 "worships",
-                "god",
-                "onkar",
                 "image",
             }
         ),
         distinctive=frozenset(
             {"form", "forms", "formless", "physical", "idol", "idols", "murti", "statue", "nirankar", "image"}
         ),
-        english=("formless", "idol", "form"),
+        english=("formless", "idol"),
         gurmukhi=("ਨਿਰੰਕਾਰ",),
     ),
     TopicSpec(
@@ -111,12 +75,12 @@ TOPICS: tuple[TopicSpec, ...] = (
         distinctive=frozenset(
             {"ritual", "rituals", "mukti", "liberation", "ceremony", "pilgrimage", "fasting", "tirath"}
         ),
-        english=("pilgrimage", "fasting", "Naam"),
-        gurmukhi=("ਨਾਮੁ",),
+        english=("pilgrimage", "fasting"),
+        gurmukhi=("ਤੀਰਥ",),
     ),
     TopicSpec(
         id="naam",
-        tokens=frozenset({"naam", "simran", "japna", "meditation", "remembrance"}),
+        tokens=frozenset({"naam", "simran", "japna", "remembrance"}),
         distinctive=frozenset({"naam", "simran", "japna"}),
         english=("Naam",),
         gurmukhi=("ਨਾਮੁ",),
@@ -126,55 +90,73 @@ TOPICS: tuple[TopicSpec, ...] = (
         tokens=frozenset({"caste", "janeu", "varna"}),
         distinctive=frozenset({"caste", "janeu"}),
         english=("caste",),
-        gurmukhi=(),
+        gurmukhi=("ਜਾਤਿ",),
     ),
     TopicSpec(
         id="equality_women",
-        tokens=frozenset({"woman", "women", "female", "gender", "amrit"}),
+        tokens=frozenset({"woman", "women", "female", "gender"}),
         distinctive=frozenset({"woman", "women", "female", "gender"}),
         english=("woman",),
-        gurmukhi=(),
+        gurmukhi=("ਇਸਤ੍ਰੀ",),
     ),
     TopicSpec(
         id="langar",
-        tokens=frozenset({"langar", "kitchen", "food", "foreigner", "foreigners"}),
+        tokens=frozenset({"langar", "kitchen", "foreigner", "foreigners"}),
         distinctive=frozenset({"langar", "kitchen"}),
-        english=("food", "hungry"),
+        english=("hungry",),
         gurmukhi=(),
     ),
     TopicSpec(
         id="hukam",
-        tokens=frozenset({"hukam", "grace", "nadar", "will"}),
-        distinctive=frozenset({"hukam", "nadar", "grace"}),
-        english=("Hukam", "grace"),
+        tokens=frozenset({"hukam", "nadar"}),
+        distinctive=frozenset({"hukam", "nadar"}),
+        english=("Hukam",),
         gurmukhi=("ਹੁਕਮੁ",),
     ),
     TopicSpec(
         id="kakaars",
-        tokens=frozenset({"kirpan", "kesh", "kes", "hair", "sword", "kara", "kangha"}),
-        distinctive=frozenset({"kirpan", "kesh", "kes", "hair", "sword"}),
-        english=("sword", "hair"),
+        tokens=frozenset({"kirpan", "kesh", "kes", "hair", "kara", "kangha"}),
+        distinctive=frozenset({"kirpan", "kesh", "kes", "hair"}),
+        english=("hair",),
         gurmukhi=(),
     ),
     TopicSpec(
         id="diet",
         tokens=frozenset(
-            {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary", "eating", "halal"}
+            {
+                "meat",
+                "flesh",
+                "kutha",
+                "jhatka",
+                "vegetarian",
+                "diet",
+                "dietary",
+                "halal",
+                "maas",
+            }
         ),
-        distinctive=frozenset({"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "halal"}),
+        distinctive=frozenset({"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "halal", "maas"}),
         english=("eat meat", "flesh"),
-        gurmukhi=(),
+        gurmukhi=("ਮਾਸ",),
     ),
     TopicSpec(
         id="ego",
-        tokens=frozenset({"ego", "haumai", "pride", "humble"}),
+        tokens=frozenset({"ego", "haumai", "pride"}),
         distinctive=frozenset({"ego", "haumai", "pride"}),
         english=("ego",),
         gurmukhi=("ਹਉਮੈ",),
     ),
+    TopicSpec(
+        id="honest_living",
+        tokens=frozenset({"honest", "honesty", "kirat", "earning"}),
+        distinctive=frozenset({"honest", "honesty", "kirat"}),
+        english=("honest living",),
+        gurmukhi=(),
+    ),
 )
 
 # Claim token -> short BaniDB English queries that tend to hit real verses.
+# Do not map generic words (guru, truth, god, sikh) — those retrieve random shabads.
 TOKEN_QUERIES: dict[str, tuple[str, ...]] = {
     "ritual": ("pilgrimage", "fasting"),
     "rituals": ("pilgrimage", "fasting"),
@@ -185,47 +167,36 @@ TOKEN_QUERIES: dict[str, tuple[str, ...]] = {
     "pilgrimage": ("pilgrimage",),
     "tirath": ("pilgrimage",),
     "fasting": ("fasting",),
-    "form": ("formless", "form"),
+    "form": ("formless",),
     "formless": ("formless",),
     "physical": ("formless", "idol"),
     "idol": ("idol",),
     "murti": ("idol",),
-    "worship": ("worship", "formless"),
-    "worshipped": ("worship", "formless"),
+    "worship": ("formless",),
+    "worshipped": ("formless",),
     "caste": ("caste",),
     "janeu": ("caste",),
     "woman": ("woman",),
     "women": ("woman",),
-    "langar": ("food", "hungry"),
+    "langar": ("hungry",),
     "kirpan": ("sword",),
-    "sword": ("sword",),
     "kesh": ("hair",),
     "kes": ("hair",),
     "hair": ("hair",),
     "hukam": ("Hukam",),
-    "grace": ("grace",),
     "ego": ("ego",),
     "haumai": ("ego",),
-    "truth": ("Truth",),
-    "guru": ("Guru",),
-    "granth": ("Word",),
-    "shabad": ("Shabad",),
-    "bani": ("Bani",),
     "hindu": ("Hindu",),
     "muslim": ("Muslim",),
-    "khalsa": ("warrior",),
-    "amrit": ("Ambrosial", "Naam"),
-    "god": (),
-    "waheguru": (),
-    "onkar": ("formless",),
+    "amrit": ("Ambrosial",),
     "nirankar": ("formless",),
     "meat": ("eat meat", "flesh"),
     "flesh": ("flesh", "eat meat"),
-    "vegetarian": ("eat meat",),
-    "kutha": ("eat meat",),
-    "jhatka": ("eat meat",),
-    "eating": ("eat meat",),
-    "diet": ("eat meat",),
+    "vegetarian": ("eat meat", "flesh"),
+    "kutha": ("flesh",),
+    "jhatka": ("flesh",),
+    "diet": ("eat meat", "flesh"),
+    "maas": ("flesh", "eat meat"),
     "honest": ("honest living",),
     "honesty": ("honest living",),
     "kirat": ("honest living",),
@@ -234,14 +205,15 @@ TOKEN_QUERIES: dict[str, tuple[str, ...]] = {
 
 
 def scripture_queries_for(claim_text: str) -> list[ScriptureQuery]:
-    """Heuristic mapping of any claim onto short BaniDB searches."""
-    tokens = expand_tokens(content_tokens(claim_text))
+    """Heuristic mapping of a claim onto short, on-subject BaniDB searches."""
+    focus = claim_focus_tokens(claim_text)
+    tokens = expand_tokens(focus) if focus else claim_focus_tokens(claim_text)
     queries: list[ScriptureQuery] = []
     seen: set[tuple[str, int]] = set()
 
     def add(query: str, searchtype: int, topic: str) -> None:
         query = (query or "").strip()
-        if not query or len(query) > 40:
+        if not is_usable_search_query(query, claim_focus=focus, require_focus=False):
             return
         key = (query.lower(), searchtype)
         if key in seen:
@@ -261,8 +233,6 @@ def scripture_queries_for(claim_text: str) -> list[ScriptureQuery]:
             add(q, 2, topic.id)
 
     for tok in tokens:
-        if tok in GENERIC_TOKENS or tok in {"lord", "one"}:
-            continue
         for q in TOKEN_QUERIES.get(tok, ()):
             add(q, 3, f"token:{tok}")
 
@@ -270,41 +240,32 @@ def scripture_queries_for(claim_text: str) -> list[ScriptureQuery]:
 
 
 async def scripture_queries_for_claim(claim_text: str) -> list[ScriptureQuery]:
-    """Heuristic queries plus optional LLM-proposed Gurbani search terms."""
-    from app.services.knowledge_base import core_subject_tokens, expand_tokens
-
+    """Understand the claim, then merge heuristic + LLM Gurbani search terms."""
+    focus = claim_focus_tokens(claim_text)
     queries = list(scripture_queries_for(claim_text))
     seen = {(q.query.lower(), q.searchtype) for q in queries}
-    subject = expand_tokens(core_subject_tokens(claim_text))
-    llm = await chat_json(
-        (
-            "You pick short search strings to look up Sri Guru Granth Sahib Ji for THIS claim's subject. "
-            "Return ONLY JSON: {\"queries\": [{\"q\": \"eat meat\", \"lang\": \"en\"}]}. "
-            "Each q must be 1-3 words that would appear in a verse ABOUT the claim's topic "
-            "(e.g. meat/flesh, formless, caste, pilgrimage). "
-            "Do NOT use filler words (completely, totally, forbids, Lord, Guru, Sikh). "
-            "If Gurbani is unlikely to address the claim, return {\"queries\": []}."
-        ),
-        f"Claim:\n{claim_text[:1500]}\nSubject tokens: {sorted(subject)}",
-    )
-    if not llm:
-        return queries[:6]
-    for item in llm.get("queries") or []:
+
+    understood = await understand_claim_subject(claim_text)
+    if understood.get("gurbani_relevant") is False and not queries:
+        return []
+
+    def add(query: str, searchtype: int, topic: str) -> None:
+        query = (query or "").strip()
+        if not is_usable_search_query(query, claim_focus=focus, require_focus=True):
+            return
+        key = (query.lower(), searchtype)
+        if key in seen:
+            return
+        seen.add(key)
+        queries.append(ScriptureQuery(query=query, searchtype=searchtype, topic=topic))
+
+    for item in understood.get("queries") or []:
         q = (item.get("q") or "").strip()
         lang = (item.get("lang") or "en").lower()
         if not q or len(q.split()) > 3:
             continue
-        q_tokens = expand_tokens(core_subject_tokens(q) or {w.lower() for w in q.split()})
-        if subject and not (q_tokens & subject) and not any("\u0A00" <= ch <= "\u0A7F" for ch in q):
-            continue
-        if q.lower() in GENERIC_TOKENS:
-            continue
-        searchtype = 2 if lang in {"pa", "gurmukhi"} or any("\u0A00" <= ch <= "\u0A7F" for ch in q) else 3
-        key = (q.lower(), searchtype)
-        if key in seen:
-            continue
-        seen.add(key)
-        queries.append(ScriptureQuery(query=q, searchtype=searchtype, topic="llm"))
+        searchtype = 2 if lang in {"pa", "gurmukhi", "pa-guru"} or has_gurmukhi(q) else 3
+        add(q, searchtype, "llm")
         if len(queries) >= 6:
             break
     return queries[:6]

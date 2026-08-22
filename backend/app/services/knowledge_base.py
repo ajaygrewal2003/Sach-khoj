@@ -51,7 +51,8 @@ SYNONYM_GROUPS: list[set[str]] = [
      "idol", "idols", "murti", "statue", "salagram", "saalagraam"},
     {"women", "woman", "gender"},
     {"nitnem", "paath", "path"},
-    {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary"},
+    {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary", "maas"},
+    {"honest", "honesty", "kirat", "earning"},
 ]
 
 

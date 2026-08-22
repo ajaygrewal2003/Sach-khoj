@@ -6,9 +6,14 @@ from typing import Any
 from app.integrations.banidb import BaniDBClient
 from app.integrations.gurbaninow import GurbaniNowClient
 from app.pipeline.gurbani_topics import scripture_queries_for_claim
+from app.pipeline.relevance import (
+    claim_focus_tokens,
+    filter_verses_for_claim,
+    judge_verses_for_claim,
+    verse_matches_claim,
+)
 from app.schemas import ExtractedClaim
-from app.services.knowledge_base import get_knowledge_base, subject_overlap
-from app.services.llm import chat_json
+from app.services.knowledge_base import get_knowledge_base
 
 ANG_RE = re.compile(r"\bang\s*[:#]?\s*(\d{1,4})\b", re.IGNORECASE)
 GURMUKHI_RE = re.compile(r"[\u0A00-\u0A7F]{6,}")
@@ -29,43 +34,19 @@ def _should_search_quoted_scripture(claim: ExtractedClaim) -> bool:
 
 
 def _score_scripture_against_claim(claim_text: str, item: dict[str, Any]) -> dict[str, Any] | None:
-    blob = f"{item.get('translation') or ''} {item.get('excerpt') or ''}"
-    overlap = subject_overlap(claim_text, blob)
-    if overlap < 1:
+    """Keep a verse only when it shares the claim's distinctive subject."""
+    if not verse_matches_claim(
+        claim_text,
+        translation=str(item.get("translation") or ""),
+        excerpt=str(item.get("excerpt") or ""),
+    ):
         return None
-    score = 0.40 + 0.20 * min(overlap / 3.0, 1.0)
-    return {**item, "score": round(score, 3), "match_reason": "scripture_topic"}
-
-
-async def _llm_filter_scripture(claim_text: str, verses: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Drop verses that only share an incidental English word with the claim."""
-    if len(verses) <= 1:
-        return verses
-    compact = [
-        {
-            "id": v.get("id"),
-            "reference": v.get("reference"),
-            "translation": (v.get("translation") or "")[:240],
-            "excerpt": (v.get("excerpt") or "")[:120],
-        }
-        for v in verses
-    ]
-    data = await chat_json(
-        (
-            "You are filtering Guru Granth Sahib verses for relevance. "
-            "Keep a verse only if a careful reader would use it to discuss THIS claim's actual subject. "
-            "Reject verses that merely share a filler word (completely, totally, Lord, saved, fulfilled). "
-            "Return JSON {\"keep_ids\": [\"id\", ...]}."
-        ),
-        f"Claim: {claim_text[:1500]}\nVerses: {compact}",
-        max_tokens=400,
+    overlap = len(
+        claim_focus_tokens(claim_text)
+        & claim_focus_tokens(f"{item.get('translation') or ''} {item.get('excerpt') or ''}")
     )
-    if not data:
-        return verses
-    keep = set(data.get("keep_ids") or [])
-    if not keep:
-        return []
-    return [v for v in verses if v.get("id") in keep]
+    score = 0.45 + 0.20 * min(max(overlap, 1) / 3.0, 1.0)
+    return {**item, "score": round(score, 3), "match_reason": "scripture_topic"}
 
 
 async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
@@ -102,7 +83,7 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
     banidb = BaniDBClient()
     gnow = GurbaniNowClient()
 
-    # For every claim, try on-topic Gurbani (short queries only — never the full sentence).
+    # Search Gurbani using subject queries only — never the full claim sentence.
     for sq in await scripture_queries_for_claim(claim.text):
         hits = await banidb.search_for_claim(sq.query, searchtype=sq.searchtype, limit=4)
         scored = [_score_scripture_against_claim(claim.text, h) for h in hits]
@@ -113,26 +94,51 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
         if ang_match:
             ang = int(ang_match.group(1))
             if 1 <= ang <= 1430:
-                add_many(await banidb.get_ang(ang), min_score=None)
+                ang_hits = await banidb.get_ang(ang)
+                keep_named_ang = [
+                    {**h, "match_reason": "named_ang", "score": h.get("score") or 0.55} for h in ang_hits[:6]
+                ]
+                add_many(keep_named_ang, min_score=None)
                 if len([e for e in evidence if e.get("source") in {"BaniDB", "GurbaniNow"}]) < 4:
-                    add_many(await gnow.get_ang(ang), min_score=None)
+                    extra_ang = await gnow.get_ang(ang)
+                    add_many(
+                        [{**h, "match_reason": "named_ang"} for h in extra_ang],
+                        min_score=None,
+                    )
 
         gurmukhi = claim.quoted_gurbani or (
             GURMUKHI_RE.search(claim.text).group(0) if GURMUKHI_RE.search(claim.text) else None
         )
         search_q = (gurmukhi or claim.text).strip()
         if gurmukhi or (search_q and len(search_q.split()) <= 12 and claim.category in SCRIPTURE_CATEGORIES):
-            add_many(await banidb.search_fuzzy(search_q[:80], limit=5), min_score=None)
+            quoted_hits = await banidb.search_fuzzy(search_q[:80], limit=5)
+            add_many(
+                [{**h, "match_reason": "quoted_scripture"} for h in quoted_hits],
+                min_score=None,
+            )
             if len([e for e in evidence if e.get("source") in {"BaniDB", "GurbaniNow"}]) < 3:
-                add_many(await gnow.search(search_q[:80], results=8), min_score=None)
+                extra = await gnow.search(search_q[:80], results=8)
+                add_many(
+                    [{**h, "match_reason": "quoted_scripture"} for h in extra],
+                    min_score=None,
+                )
 
-    # Prefer known-false and BaniDB, then curated, by score.
-    # Cap scripture verses so they accompany, not bury, curated evidence.
     scripture = [e for e in evidence if e.get("source") in {"BaniDB", "GurbaniNow"}]
     rest = [e for e in evidence if e.get("source") not in {"BaniDB", "GurbaniNow"}]
-    scripture.sort(key=lambda e: float(e.get("score") or 0.0), reverse=True)
-    scripture = await _llm_filter_scripture(claim.text, scripture[:8])
-    evidence = rest + scripture[:3]
+    named = [
+        e
+        for e in scripture
+        if e.get("match_reason") in {"named_ang", "quoted_scripture"}
+    ]
+    topical = [
+        e
+        for e in scripture
+        if e.get("match_reason") not in {"named_ang", "quoted_scripture"}
+    ]
+    topical = filter_verses_for_claim(claim.text, topical)
+    topical.sort(key=lambda e: float(e.get("score") or 0.0), reverse=True)
+    topical = await judge_verses_for_claim(claim.text, topical[:8])
+    evidence = rest + named[:4] + topical[:3]
 
     def _rank_key(e: dict[str, Any]) -> tuple[int, float]:
         src = e.get("source")

@@ -47,10 +47,12 @@ Rules:
 - Do not claim Panthic authority; frame as research-assisted assessment.
 Summary and correction requirements:
 - summary MUST be 4–8 sentences (about 120–220 words). Do not write a one-liner.
-- When BaniDB/GurbaniNow verses are in the evidence list AND they address the same subject as the claim, the summary MUST weave them in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
-- If a retrieved verse is only loosely related or shares a filler word, ignore it. Prefer curated Rehat/history notes over off-topic Gurbani.
+- Quote Gurbani only when a retrieved verse is about the SAME subject as the claim (diet/meat, caste, formless God, etc.).
+- If a verse only shares a filler word (completely, totally, Lord, saved, fulfilled, comforted), ignore it completely — do not mention its Ang or quote it.
+- Prefer curated Rehat/history notes over off-topic Gurbani. It is better to cite no verse than the wrong verse.
+- When an on-topic BaniDB/GurbaniNow verse is present, weave it in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
 - Use only Gurmukhi, translations, and Ang numbers that appear in the retrieved evidence. Never invent verses.
-- correction should also be 2–4 sentences when the verdict is false or misleading, and may quote the same retrieved Gurbani.
+- correction should also be 2–4 sentences when the verdict is false or misleading, and may quote the same on-topic retrieved Gurbani.
 """
 
 

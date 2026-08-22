@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -130,15 +131,33 @@ class BaniDBClient:
         """Search Gurmukhi (type 2) or English translation (type 3) and attach a match score."""
         results = await self.search(query, searchtype=searchtype, results=max(limit * 2, 8))
         ranked: list[tuple[float, dict[str, Any]]] = []
+        query_l = (query or "").strip()
         for item in results:
             haystack = f"{item.get('excerpt') or ''} {item.get('translation') or ''}"
+            if searchtype == 3 and query_l:
+                if not self._english_query_hits(query_l, haystack):
+                    continue
+            elif searchtype == 2 and query_l and query_l not in (item.get("excerpt") or ""):
+                # Gurmukhi headword should appear in the verse unicode.
+                continue
             score = max(
-                fuzz.partial_ratio(query, haystack),
-                fuzz.token_set_ratio(query, haystack),
+                fuzz.partial_ratio(query_l, haystack),
+                fuzz.token_set_ratio(query_l, haystack),
             )
-            ranked.append((score, {**item, "score": round(max(score / 100.0, 0.35), 3), "match_reason": "scripture_topic"}))
+            ranked.append((score, {**item, "score": round(max(score / 100.0, 0.35), 3)}))
         ranked.sort(key=lambda x: x[0], reverse=True)
         return [item for _, item in ranked[:limit]]
+
+    def _english_query_hits(self, query: str, haystack: str) -> bool:
+        """Require the search phrase (or each content word) as whole words, not substrings."""
+        if not query or not haystack:
+            return False
+        if re.search(rf"\b{re.escape(query)}\b", haystack, re.IGNORECASE):
+            return True
+        words = [w for w in re.findall(r"[A-Za-z]+", query) if len(w) > 2]
+        if len(words) >= 2 and all(re.search(rf"\b{re.escape(w)}\b", haystack, re.IGNORECASE) for w in words):
+            return True
+        return False
 
     def _normalize_verse(self, verse: dict[str, Any]) -> dict[str, Any]:
         verse_body = verse.get("verse") or {}
