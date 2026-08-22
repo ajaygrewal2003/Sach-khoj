@@ -171,6 +171,48 @@ def test_scripture_queries_for_many_claim_types():
     women = scripture_queries_for("Women cannot take Amrit according to the Gurus.")
     assert women
 
+    meat_qs = scripture_queries_for("Sikhi completely forbids eating meat.")
+    meat_labels = {q.query.lower() for q in meat_qs}
+    assert "completely" not in meat_labels
+    assert "forbids" not in meat_labels
+    assert any("meat" in q.query.lower() or "flesh" in q.query.lower() for q in meat_qs)
+
+
+def test_off_topic_gurbani_is_dropped():
+    from app.pipeline.retrieve import _score_scripture_against_claim
+    from app.services.knowledge_base import KnowledgeBase
+
+    junk = _score_scripture_against_claim(
+        "Sikhi completely forbids eating meat.",
+        {
+            "id": "banidb:x:133",
+            "source": "BaniDB",
+            "reference": "Ang 133",
+            "excerpt": "ਸਭ ਛਡਾਈ",
+            "translation": "My Lord and Master Himself has saved me completely; I am comforted by meditating on the Lord.",
+        },
+    )
+    assert junk is None
+
+    ok = _score_scripture_against_claim(
+        "Sikhi completely forbids eating meat.",
+        {
+            "id": "banidb:x:144",
+            "source": "BaniDB",
+            "reference": "Ang 144",
+            "excerpt": "ਇਕਿ ਮਾਸਹਾਰੀ",
+            "translation": "Some eat meat, while others eat grass.",
+        },
+    )
+    assert ok is not None
+
+    kb = KnowledgeBase()
+    kb.load(force=True)
+    hits = kb.match_known_false("Sikhi completely forbids eating meat.")
+    assert hits
+    assert "meat" in hits[0]["meta"]["claim_pattern"].lower()
+    assert "education" not in hits[0]["meta"]["claim_pattern"].lower()
+
 
 @pytest.mark.asyncio
 async def test_form_claim_false_without_llm():

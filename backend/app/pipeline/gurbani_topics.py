@@ -35,6 +35,16 @@ GENERIC_TOKENS = {
     "never",
     "everyone",
     "anyone",
+    "completely",
+    "totally",
+    "entirely",
+    "fully",
+    "forbids",
+    "forbid",
+    "forbidden",
+    "prohibits",
+    "emphasize",
+    "emphasizes",
 }
 
 
@@ -147,6 +157,15 @@ TOPICS: tuple[TopicSpec, ...] = (
         gurmukhi=(),
     ),
     TopicSpec(
+        id="diet",
+        tokens=frozenset(
+            {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary", "eating", "halal"}
+        ),
+        distinctive=frozenset({"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "halal"}),
+        english=("eat meat", "flesh"),
+        gurmukhi=(),
+    ),
+    TopicSpec(
         id="ego",
         tokens=frozenset({"ego", "haumai", "pride", "humble"}),
         distinctive=frozenset({"ego", "haumai", "pride"}),
@@ -196,10 +215,21 @@ TOKEN_QUERIES: dict[str, tuple[str, ...]] = {
     "muslim": ("Muslim",),
     "khalsa": ("warrior",),
     "amrit": ("Ambrosial", "Naam"),
-    "god": ("Lord", "formless"),
-    "waheguru": ("Lord",),
-    "onkar": ("One", "formless"),
+    "god": (),
+    "waheguru": (),
+    "onkar": ("formless",),
     "nirankar": ("formless",),
+    "meat": ("eat meat", "flesh"),
+    "flesh": ("flesh", "eat meat"),
+    "vegetarian": ("eat meat",),
+    "kutha": ("eat meat",),
+    "jhatka": ("eat meat",),
+    "eating": ("eat meat",),
+    "diet": ("eat meat",),
+    "honest": ("honest living",),
+    "honesty": ("honest living",),
+    "kirat": ("honest living",),
+    "earning": ("honest living",),
 }
 
 
@@ -231,53 +261,50 @@ def scripture_queries_for(claim_text: str) -> list[ScriptureQuery]:
             add(q, 2, topic.id)
 
     for tok in tokens:
-        if tok in GENERIC_TOKENS:
+        if tok in GENERIC_TOKENS or tok in {"lord", "one"}:
             continue
         for q in TOKEN_QUERIES.get(tok, ()):
             add(q, 3, f"token:{tok}")
 
-    # Last resort: distinctive claim words as English translation searches.
-    for tok in tokens:
-        if tok in GENERIC_TOKENS or len(tok) < 5:
-            continue
-        if tok in TOKEN_QUERIES:
-            continue
-        if any(tok in t.tokens for t in TOPICS):
-            continue
-        add(tok, 3, "claim-token")
-        if len(queries) >= 8:
-            break
-
-    return queries[:8]
+    return queries[:6]
 
 
 async def scripture_queries_for_claim(claim_text: str) -> list[ScriptureQuery]:
     """Heuristic queries plus optional LLM-proposed Gurbani search terms."""
+    from app.services.knowledge_base import core_subject_tokens, expand_tokens
+
     queries = list(scripture_queries_for(claim_text))
     seen = {(q.query.lower(), q.searchtype) for q in queries}
+    subject = expand_tokens(core_subject_tokens(claim_text))
     llm = await chat_json(
         (
-            "You pick short search strings to look up Sri Guru Granth Sahib Ji. "
-            "Return ONLY JSON: {\"queries\": [{\"q\": \"formless\", \"lang\": \"en\"}]}. "
-            "Each q must be 1-3 words. lang is en or pa (Gurmukhi unicode). "
-            "Do not send full sentences. Prefer words that appear in standard English translations "
-            "(Naam, formless, caste, woman, pilgrimage, Hukam, Guru, Lord, Truth, ego, sword, hair)."
+            "You pick short search strings to look up Sri Guru Granth Sahib Ji for THIS claim's subject. "
+            "Return ONLY JSON: {\"queries\": [{\"q\": \"eat meat\", \"lang\": \"en\"}]}. "
+            "Each q must be 1-3 words that would appear in a verse ABOUT the claim's topic "
+            "(e.g. meat/flesh, formless, caste, pilgrimage). "
+            "Do NOT use filler words (completely, totally, forbids, Lord, Guru, Sikh). "
+            "If Gurbani is unlikely to address the claim, return {\"queries\": []}."
         ),
-        f"Claim:\n{claim_text[:1500]}",
+        f"Claim:\n{claim_text[:1500]}\nSubject tokens: {sorted(subject)}",
     )
     if not llm:
-        return queries[:8]
+        return queries[:6]
     for item in llm.get("queries") or []:
         q = (item.get("q") or "").strip()
         lang = (item.get("lang") or "en").lower()
         if not q or len(q.split()) > 3:
             continue
-        searchtype = 2 if lang in {"pa", "gurmukhi", "pa-guru"} or any("\u0A00" <= ch <= "\u0A7F" for ch in q) else 3
+        q_tokens = expand_tokens(core_subject_tokens(q) or {w.lower() for w in q.split()})
+        if subject and not (q_tokens & subject) and not any("\u0A00" <= ch <= "\u0A7F" for ch in q):
+            continue
+        if q.lower() in GENERIC_TOKENS:
+            continue
+        searchtype = 2 if lang in {"pa", "gurmukhi"} or any("\u0A00" <= ch <= "\u0A7F" for ch in q) else 3
         key = (q.lower(), searchtype)
         if key in seen:
             continue
         seen.add(key)
         queries.append(ScriptureQuery(query=q, searchtype=searchtype, topic="llm"))
-        if len(queries) >= 8:
+        if len(queries) >= 6:
             break
-    return queries[:8]
+    return queries[:6]

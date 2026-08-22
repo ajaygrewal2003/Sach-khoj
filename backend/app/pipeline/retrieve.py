@@ -7,7 +7,8 @@ from app.integrations.banidb import BaniDBClient
 from app.integrations.gurbaninow import GurbaniNowClient
 from app.pipeline.gurbani_topics import scripture_queries_for_claim
 from app.schemas import ExtractedClaim
-from app.services.knowledge_base import get_knowledge_base, topical_overlap
+from app.services.knowledge_base import get_knowledge_base, subject_overlap
+from app.services.llm import chat_json
 
 ANG_RE = re.compile(r"\bang\s*[:#]?\s*(\d{1,4})\b", re.IGNORECASE)
 GURMUKHI_RE = re.compile(r"[\u0A00-\u0A7F]{6,}")
@@ -28,12 +29,43 @@ def _should_search_quoted_scripture(claim: ExtractedClaim) -> bool:
 
 
 def _score_scripture_against_claim(claim_text: str, item: dict[str, Any]) -> dict[str, Any] | None:
-    blob = f"{item.get('translation') or ''} {item.get('excerpt') or ''} {item.get('reference') or ''}"
-    distinctive, ratio = topical_overlap(claim_text, blob)
-    if distinctive < 1 and ratio < 0.12:
+    blob = f"{item.get('translation') or ''} {item.get('excerpt') or ''}"
+    overlap = subject_overlap(claim_text, blob)
+    if overlap < 1:
         return None
-    score = 0.22 + 0.55 * ratio + 0.23 * min(distinctive / 3.0, 1.0)
+    score = 0.40 + 0.20 * min(overlap / 3.0, 1.0)
     return {**item, "score": round(score, 3), "match_reason": "scripture_topic"}
+
+
+async def _llm_filter_scripture(claim_text: str, verses: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop verses that only share an incidental English word with the claim."""
+    if len(verses) <= 1:
+        return verses
+    compact = [
+        {
+            "id": v.get("id"),
+            "reference": v.get("reference"),
+            "translation": (v.get("translation") or "")[:240],
+            "excerpt": (v.get("excerpt") or "")[:120],
+        }
+        for v in verses
+    ]
+    data = await chat_json(
+        (
+            "You are filtering Guru Granth Sahib verses for relevance. "
+            "Keep a verse only if a careful reader would use it to discuss THIS claim's actual subject. "
+            "Reject verses that merely share a filler word (completely, totally, Lord, saved, fulfilled). "
+            "Return JSON {\"keep_ids\": [\"id\", ...]}."
+        ),
+        f"Claim: {claim_text[:1500]}\nVerses: {compact}",
+        max_tokens=400,
+    )
+    if not data:
+        return verses
+    keep = set(data.get("keep_ids") or [])
+    if not keep:
+        return []
+    return [v for v in verses if v.get("id") in keep]
 
 
 async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
@@ -99,7 +131,8 @@ async def retrieve_evidence(claim: ExtractedClaim) -> list[dict[str, Any]]:
     scripture = [e for e in evidence if e.get("source") in {"BaniDB", "GurbaniNow"}]
     rest = [e for e in evidence if e.get("source") not in {"BaniDB", "GurbaniNow"}]
     scripture.sort(key=lambda e: float(e.get("score") or 0.0), reverse=True)
-    evidence = rest + scripture[:4]
+    scripture = await _llm_filter_scripture(claim.text, scripture[:8])
+    evidence = rest + scripture[:3]
 
     def _rank_key(e: dict[str, Any]) -> tuple[int, float]:
         src = e.get("source")

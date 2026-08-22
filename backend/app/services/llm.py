@@ -24,7 +24,7 @@ Return ONLY valid JSON matching:
 Rules:
 - Split mixed posts into separate verifiable factual claims.
 - Skip pure opinion unless it asserts a false factual premise.
-- Prefer category doctrine for teachings about Naam, mukti, rituals, Hukam, pilgrimage, or Rehat-as-salvation claims.
+- Prefer category doctrine for teachings about Naam, mukti, rituals, Hukam, pilgrimage, diet/meat, or Rehat-as-salvation claims.
 - Prefer category gurbani_misquote when a verse/Ang/Guru attribution is asserted.
 - Prefer out_of_context when a real-looking verse is used with misleading framing.
 """
@@ -47,7 +47,8 @@ Rules:
 - Do not claim Panthic authority; frame as research-assisted assessment.
 Summary and correction requirements:
 - summary MUST be 4–8 sentences (about 120–220 words). Do not write a one-liner.
-- When BaniDB/GurbaniNow verses are in the evidence list, the summary MUST weave them in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
+- When BaniDB/GurbaniNow verses are in the evidence list AND they address the same subject as the claim, the summary MUST weave them in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
+- If a retrieved verse is only loosely related or shares a filler word, ignore it. Prefer curated Rehat/history notes over off-topic Gurbani.
 - Use only Gurmukhi, translations, and Ang numbers that appear in the retrieved evidence. Never invent verses.
 - correction should also be 2–4 sentences when the verdict is false or misleading, and may quote the same retrieved Gurbani.
 """

@@ -237,6 +237,18 @@
       "explanation": "Sikh teaching names God as Ik Onkar and Nirankar (the One, without form). Confining worship to one physical murti or bodily form contradicts Gurbani.",
       "correction": "Sikhi does not teach that God can only be worshipped in one specific physical form. Devotion is to the formless One through Naam and the Guru Granth Sahib.",
       "source_refs": ["theo:nirankar-not-one-form", "theo:idol-and-form", "rehat:no-idol"]
+    },
+    {
+      "id": "kf-028",
+      "claim_pattern": "Sikhi completely forbids eating meat / all Sikhs must be vegetarian",
+      "aliases": [
+        "Gurbani bans all meat for every Sikh",
+        "Sikh Rehat Maryada makes vegetarianism compulsory for all Sikhs"
+      ],
+      "category": "doctrine",
+      "explanation": "There is no panthic blanket ban on all meat for all Sikhs. Amritdhari Rehat forbids kutha (halal-style) meat. Vegetarian vs jhatka practice varies; treating that as 'Sikhi completely forbids meat' is overstated.",
+      "correction": "Sikhi does not completely forbid all meat for all Sikhs. Rehat forbids kutha for Amritdhari Sikhs; a full vegetarian rule is not a universal doctrinal ban.",
+      "source_refs": ["rehat:diet", "rehat:tobacco"]
     }
   ]
 }

@@ -17,7 +17,7 @@ REHAT_RE = re.compile(r"\b(rehat|maryada|khalsa|amrit|kes|kesh|kirpan|kangha|kar
 DOCTRINE_RE = re.compile(
     r"\b(rituals?|mukti|liberation|salvation|naam|nam simran|hukam|pilgrimage|tirath|"
     r"nitnem|janeu|karam\s*kand|idol|murti|formless|nirankar|physical\s+form|"
-    r"worshipped|worship)\b",
+    r"worshipped|worship|meat|vegetarian|kutha|jhatka)\b",
     re.IGNORECASE,
 )
 HISTORY_RE = re.compile(

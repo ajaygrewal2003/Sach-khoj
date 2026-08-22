@@ -57,6 +57,14 @@
       "tags": ["rehat", "guru granth sahib", "guruship"],
       "reference": "Rehat Maryada — Eternal Guruship",
       "excerpt": "Guru Gobind Singh Ji conferred eternal Guruship on the Guru Granth Sahib. Mainstream Sikh doctrine does not accept a living human Guru succeeding after Guru Gobind Singh Ji."
+    },
+    {
+      "id": "rehat:diet",
+      "category": "rehat",
+      "tags": ["rehat", "meat", "kutha", "diet", "vegetarian"],
+      "keywords": ["meat", "flesh", "kutha", "jhatka", "vegetarian", "halal", "diet", "eating"],
+      "reference": "Rehat Maryada — Diet (kutha vs a blanket meat ban)",
+      "excerpt": "Sikh Rehat Maryada forbids kutha (meat killed in the Muslim ritual manner) for Amritdhari Sikhs. It does not declare that all Sikhs are forbidden all meat, nor that vegetarianism is a universal requirement of Sikhi. Whether a Sikh eats jhatka meat or keeps a vegetarian diet is a matter of personal and jatha practice. The claim that 'Sikhi completely forbids eating meat' overstates Rehat as a total ban."
     }
   ]
 }

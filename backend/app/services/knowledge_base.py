@@ -19,20 +19,21 @@ _TOKEN_RE = re.compile(r"[\w\u0A00-\u0A7F]+", re.UNICODE)
 STOPWORDS = {
     "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "that", "this", "with",
     "from", "is", "are", "was", "were", "be", "been", "by", "as", "it", "its", "at",
-    "can", "could", "would", "should", "must", "may", "might", "will", "just", "only",
+    "can", "could", "would", "should", "must", "may", "might", "will",     "just", "only",
     "also", "than", "then", "there", "their", "they", "them", "these", "those", "but",
     "not", "no", "yes", "if", "into", "about", "over", "after", "before", "between",
     "said", "says", "say", "claim", "claims", "according", "teach", "teaches", "teaching",
     "taught", "ji", "sri", "the", "any", "all", "does", "do", "doing", "done", "has",
     "have", "had", "been", "being", "who", "whom", "which", "what", "when", "where",
     "how", "why", "very", "more", "most", "such", "via", "per", "vs", "etc",
+    "completely", "totally", "entirely", "fully", "always", "never", "everyone", "anyone",
 }
 
 # If any token in a group appears, add the whole group to the token set.
 SYNONYM_GROUPS: list[set[str]] = [
     {"ritual", "rituals", "rite", "rites", "ceremony", "ceremonies", "ceremonial",
      "karam", "karmakand", "karamkand", "formalism", "formal"},
-    {"liberation", "mukti", "moksha", "salvation", "saved", "heaven", "mukhti"},
+    {"liberation", "mukti", "moksha", "salvation", "heaven", "mukhti"},
     {"naam", "nam", "simran", "meditation", "japna", "remembrance"},
     {"pilgrimage", "tirath", "teerath", "yatra", "bathing"},
     {"sikh", "sikhi", "sikhism", "sikhs"},
@@ -50,6 +51,7 @@ SYNONYM_GROUPS: list[set[str]] = [
      "idol", "idols", "murti", "statue", "salagram", "saalagraam"},
     {"women", "woman", "gender"},
     {"nitnem", "paath", "path"},
+    {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary"},
 ]
 
 
@@ -67,6 +69,28 @@ def expand_tokens(tokens: set[str]) -> set[str]:
         if out & group:
             out |= group
     return out
+
+
+WEAK_SUBJECT_TOKENS = {
+    "sikh", "sikhi", "sikhism", "sikhs", "guru", "gurus", "gurbani", "bani",
+    "forbid", "forbids", "forbidden", "ban", "bans", "banned", "prohibits", "prohibit",
+    "completely", "totally", "entirely", "fully", "always", "never", "only", "just",
+    "lord", "god", "master", "divine", "waheguru", "him", "his", "himself",
+    "saved", "fulfilled", "comforted", "meditating", "teaches", "teaching", "taught",
+    "claim", "claims", "according", "emphasize", "emphasizes", "people", "religion",
+}
+
+
+def core_subject_tokens(text: str) -> set[str]:
+    """Noun-ish tokens that should match for two texts to be about the same subject."""
+    return content_tokens(text) - WEAK_SUBJECT_TOKENS
+
+
+def subject_overlap(a: str, b: str) -> int:
+    """Count overlapping *subject* tokens after dropping weak filler and expanding synonyms."""
+    qa = expand_tokens(core_subject_tokens(a))
+    qb = expand_tokens(core_subject_tokens(b))
+    return len(qa & qb)
 
 
 def topical_overlap(query: str, document: str) -> tuple[int, float]:
@@ -236,15 +260,20 @@ class KnowledgeBase:
                 if not pattern:
                     continue
                 distinctive, lexical = topical_overlap(claim_text, pattern)
+                core_hit = subject_overlap(claim_text, pattern)
                 p_tokens = expand_tokens(content_tokens(pattern))
                 if not q_tokens or not p_tokens:
                     continue
                 jaccard = len(q_tokens & p_tokens) / max(len(q_tokens | p_tokens), 1)
                 fuzzy = fuzz.ratio(claim_text.lower(), pattern.lower()) / 100.0
-                score = 0.40 * lexical + 0.25 * jaccard + 0.20 * fuzzy + 0.15 * min(distinctive / 4.0, 1.0)
-                if distinctive >= 2:
-                    best = max(best, score)
-            if best >= 0.42:
+                # "Sikhi forbids X" must not match "Sikhism forbids Y".
+                if core_hit < 1:
+                    continue
+                if core_hit < 2 and fuzzy < 0.78:
+                    continue
+                score = 0.35 * min(core_hit / 3.0, 1.0) + 0.25 * lexical + 0.20 * jaccard + 0.20 * fuzzy
+                best = max(best, score)
+            if best >= 0.48:
                 hits.append((best, item))
 
         hits.sort(key=lambda x: x[0], reverse=True)
