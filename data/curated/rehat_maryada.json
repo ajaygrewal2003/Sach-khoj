@@ -1,0 +1,62 @@
+{
+  "source": "Sikh Rehat Maryada (summary excerpts for retrieval)",
+  "attribution": "Based on publicly documented SGPC Sikh Rehat Maryada themes. Excerpts are paraphrased summaries for fact-checking context, not a substitute for the official text.",
+  "chunks": [
+    {
+      "id": "rehat:identity",
+      "category": "rehat",
+      "tags": ["rehat", "sikh", "identity"],
+      "reference": "Rehat Maryada — Who is a Sikh",
+      "excerpt": "A Sikh is any person who faithfully believes in One Immortal Being; the ten Gurus from Guru Nanak Dev Ji to Guru Gobind Singh Ji; the Guru Granth Sahib; the utterances and teachings of the ten Gurus; and the baptism (Amrit) bequeathed by the tenth Guru; and who does not owe allegiance to any other religion."
+    },
+    {
+      "id": "rehat:bani",
+      "category": "rehat",
+      "tags": ["rehat", "gurbani", "nitnem"],
+      "reference": "Rehat Maryada — Personal discipline & Nitnem",
+      "excerpt": "A Sikh should rise early, bathe, and meditate on Naam. Daily Nitnem includes Japji Sahib, Jaap Sahib, Tav Prasad Savaiye, Rehras Sahib in the evening, and Kirtan Sohila at night. Gurbani should be recited with reverence and not altered for political slogans."
+    },
+    {
+      "id": "rehat:5ks",
+      "category": "rehat",
+      "tags": ["rehat", "khalsa", "5k"],
+      "reference": "Rehat Maryada — Five Kakaars",
+      "excerpt": "Amritdhari Khalsa Sikhs maintain the Five Kakaars: Kesh (uncut hair), Kangha (comb), Kara (iron bracelet), Kachera (cotton undergarment), and Kirpan (sword). These are articles of faith, not optional fashion accessories or symbols of aggression."
+    },
+    {
+      "id": "rehat:no-caste",
+      "category": "rehat",
+      "tags": ["rehat", "caste", "equality"],
+      "reference": "Rehat Maryada — Equality",
+      "excerpt": "Sikh teaching rejects caste hierarchy. The Guru Granth Sahib and Rehat practice emphasize equality of all people. Claims that Sikhism endorses caste supremacy contradict core Sikh doctrine."
+    },
+    {
+      "id": "rehat:no-idol",
+      "category": "rehat",
+      "tags": ["rehat", "idol", "worship"],
+      "reference": "Rehat Maryada — Worship",
+      "excerpt": "Sikh practice centers on Naam and the Guru Granth Sahib as living Guru. Idol worship and treating living persons as Guru in place of Guru Granth Sahib are inconsistent with mainstream Rehat Maryada."
+    },
+    {
+      "id": "rehat:langar",
+      "category": "rehat",
+      "tags": ["rehat", "langar", "seva"],
+      "reference": "Rehat Maryada — Langar & seva",
+      "excerpt": "Guru ka Langar is eaten together without distinction of caste, class, or status. Seva and sharing are central Sikh practices. Claims that langar is reserved for a particular ethnicity misrepresent Sikh institutions."
+    },
+    {
+      "id": "rehat:tobacco",
+      "category": "rehat",
+      "tags": ["rehat", "bajjar", "intoxicants"],
+      "reference": "Rehat Maryada — Prohibitions",
+      "excerpt": "Amritdhari discipline prohibits tobacco, intoxicants, cutting hair, and eating meat killed in the Muslim ritual manner (kutha), among other bajjar kurehits. Misrepresenting these as optional or invented by the British is historically and doctrinally inaccurate."
+    },
+    {
+      "id": "rehat:guru-granth",
+      "category": "rehat",
+      "tags": ["rehat", "guru granth sahib", "guruship"],
+      "reference": "Rehat Maryada — Eternal Guruship",
+      "excerpt": "Guru Gobind Singh Ji conferred eternal Guruship on the Guru Granth Sahib. Mainstream Sikh doctrine does not accept a living human Guru succeeding after Guru Gobind Singh Ji."
+    }
+  ]
+}

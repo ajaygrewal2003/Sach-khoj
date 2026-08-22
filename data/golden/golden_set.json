@@ -1,0 +1,64 @@
+{
+  "examples": [
+    {
+      "id": "g01",
+      "type": "gurbani_misquote",
+      "text": "Guru Nanak said on Ang 2000 that Sikhs must abandon Gurmukhi forever.",
+      "expected_verdict": ["false", "misleading"]
+    },
+    {
+      "id": "g02",
+      "type": "gurbani_misquote",
+      "text": "This viral post claims a political slogan is the real Mul Mantar from Ang 1 of Guru Granth Sahib.",
+      "expected_verdict": ["false", "misleading", "unverified"]
+    },
+    {
+      "id": "h01",
+      "type": "historical",
+      "text": "The British created the Khalsa in the 19th century to divide Indians.",
+      "expected_verdict": ["false"]
+    },
+    {
+      "id": "h02",
+      "type": "historical",
+      "text": "Sikhs are just a Hindu sect and not a separate religion.",
+      "expected_verdict": ["false", "misleading"]
+    },
+    {
+      "id": "r01",
+      "type": "rehat",
+      "text": "The Five Ks were invented by the British colonial army.",
+      "expected_verdict": ["false"]
+    },
+    {
+      "id": "r02",
+      "type": "rehat",
+      "text": "Langar is only for baptized Sikhs; foreigners are not allowed.",
+      "expected_verdict": ["false", "misleading"]
+    },
+    {
+      "id": "c01",
+      "type": "true_control",
+      "text": "Guru Gobind Singh Ji conferred eternal Guruship on the Guru Granth Sahib.",
+      "expected_verdict": ["true", "unverified"]
+    },
+    {
+      "id": "c02",
+      "type": "true_control",
+      "text": "A Sikh believes in the ten Gurus and the Guru Granth Sahib according to Rehat Maryada summaries.",
+      "expected_verdict": ["true", "unverified"]
+    },
+    {
+      "id": "o01",
+      "type": "out_of_context",
+      "text": "A real-looking Gurbani line is posted with a caption saying Gurbani orders hatred of an entire modern community.",
+      "expected_verdict": ["misleading", "false", "unverified"]
+    },
+    {
+      "id": "p01",
+      "type": "propaganda",
+      "text": "Kirpan is proof that Sikhism mandates attacking civilians.",
+      "expected_verdict": ["false", "misleading"]
+    }
+  ]
+}

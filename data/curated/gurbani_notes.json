@@ -1,0 +1,41 @@
+{
+  "source": "Gurbani & scripture reference notes",
+  "attribution": "Educational notes to support verification. Exact verse text should be confirmed via BaniDB / Sri Guru Granth Sahib Ji.",
+  "chunks": [
+    {
+      "id": "gurbani:mul-mantar",
+      "category": "gurbani",
+      "tags": ["gurbani", "mul mantar", "ang 1"],
+      "reference": "Mul Mantar — Ang 1",
+      "excerpt": "The Mul Mantar opens Sri Guru Granth Sahib Ji on Ang 1: Ik Onkar, Satnam, Karta Purakh, Nirbhau, Nirvair, Akal Murat, Ajuni Saibhang, Gur Prasad. Fabricated alternate Mul Mantars used in propaganda posts are not authentic."
+    },
+    {
+      "id": "gurbani:no-hate",
+      "category": "gurbani",
+      "tags": ["gurbani", "out_of_context"],
+      "reference": "Using Gurbani out of context",
+      "excerpt": "A real shabad can be misused by pairing it with modern political calls it does not make. Verification should check (1) whether the Gurmukhi matches an authentic Ang/shabad and (2) whether the commentary's claim is actually supported by the verse meaning."
+    },
+    {
+      "id": "gurbani:attribution",
+      "category": "gurbani",
+      "tags": ["gurbani", "attribution"],
+      "reference": "Attribution of bani",
+      "excerpt": "Verses in Guru Granth Sahib carry authorship markers (e.g., Mahla indicators and bhagat bani). Attributing Kabir Ji's or Farid Ji's compositions to Guru Nanak Dev Ji, or inventing Guru quotes absent from scripture, is a common misquote pattern."
+    },
+    {
+      "id": "gurbani:ang-range",
+      "category": "gurbani",
+      "tags": ["gurbani", "ang"],
+      "reference": "Ang numbering",
+      "excerpt": "Standard printed Sri Guru Granth Sahib Ji contains 1430 Angs. Claims citing Ang numbers outside 1–1430, or citing an Ang that does not contain the quoted line, are strong indicators of fabrication or error."
+    },
+    {
+      "id": "gurbani:dasam",
+      "category": "gurbani",
+      "tags": ["gurbani", "dasam granth"],
+      "reference": "Dasam Granth vs Guru Granth Sahib",
+      "excerpt": "Guru Granth Sahib is the eternal Guru for Sikhs. Debates about Dasam Granth composition exist in scholarship and community discourse; posts that invent verses and casually label them 'Guru Granth Sahib Ang X' without matching BaniDB should be marked false or unverified."
+    }
+  ]
+}

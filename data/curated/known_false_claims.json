@@ -1,0 +1,180 @@
+{
+  "claims": [
+    {
+      "id": "kf-001",
+      "claim_pattern": "The British created the Khalsa / Sikh identity in the 19th century",
+      "category": "historical",
+      "explanation": "This erases the 1699 Khalsa initiation by Guru Gobind Singh Ji and earlier Sikh institutional history.",
+      "correction": "The Khalsa was initiated by Guru Gobind Singh Ji on Vaisakhi 1699 at Anandpur Sahib, long before British rule in Punjab.",
+      "source_refs": ["hist:khalsa", "hist:not-hindu-sect"]
+    },
+    {
+      "id": "kf-002",
+      "claim_pattern": "Sikhs are just a Hindu sect and not a separate religion",
+      "category": "propaganda",
+      "explanation": "Sikh tradition has distinct scripture, initiation (Amrit), and eternal Guruship in Guru Granth Sahib.",
+      "correction": "Sikhism is a distinct panth with the ten Gurus and Guru Granth Sahib as eternal Guru.",
+      "source_refs": ["hist:not-hindu-sect", "rehat:identity"]
+    },
+    {
+      "id": "kf-003",
+      "claim_pattern": "Guru Nanak Dev Ji never existed / is a fictional character",
+      "category": "historical",
+      "explanation": "Denialist claims contradict extensive janamsakhi tradition, early Sikh sources, and historical scholarship.",
+      "correction": "Guru Nanak Dev Ji (1469–1539) is the founding Guru of Sikhism with a well-attested historical tradition.",
+      "source_refs": ["hist:nanak"]
+    },
+    {
+      "id": "kf-004",
+      "claim_pattern": "There is no caste equality in Sikhism / Gurus supported caste hierarchy",
+      "category": "rehat",
+      "explanation": "Core Sikh teaching and Rehat practice reject caste hierarchy; langar and sangat embody equality.",
+      "correction": "Sikh doctrine rejects caste discrimination; equality is foundational in Gurbani and Rehat Maryada.",
+      "source_refs": ["rehat:no-caste", "rehat:langar"]
+    },
+    {
+      "id": "kf-005",
+      "claim_pattern": "The Five Ks were invented by the British colonial army",
+      "category": "rehat",
+      "explanation": "The Five Kakaars are articles of Khalsa faith associated with Guru Gobind Singh Ji's discipline, not British invention.",
+      "correction": "Kesh, Kangha, Kara, Kachera, and Kirpan are Khalsa articles of faith from the Guru period.",
+      "source_refs": ["rehat:5ks", "hist:khalsa"]
+    },
+    {
+      "id": "kf-006",
+      "claim_pattern": "Guru Gobind Singh Ji appointed a living human Guru after himself instead of Guru Granth Sahib",
+      "category": "historical",
+      "explanation": "Mainstream Sikh doctrine holds that eternal Guruship was conferred on Guru Granth Sahib.",
+      "correction": "Guru Gobind Singh Ji conferred Guruship on the Guru Granth Sahib as eternal Guru.",
+      "source_refs": ["rehat:guru-granth", "hist:sggs"]
+    },
+    {
+      "id": "kf-007",
+      "claim_pattern": "Sri Guru Granth Sahib has more than 1430 Angs / secret missing Angs prove conspiracy",
+      "category": "gurbani_misquote",
+      "explanation": "Standard printed Guru Granth Sahib has 1430 Angs; secret-volume conspiracy claims are a common fabrication pattern.",
+      "correction": "Verify any Ang citation against BaniDB within Angs 1–1430.",
+      "source_refs": ["gurbani:ang-range"]
+    },
+    {
+      "id": "kf-008",
+      "claim_pattern": "Women cannot take Amrit or participate as equals in Sikh practice according to Gurus",
+      "category": "rehat",
+      "explanation": "Mainstream Sikh teaching affirms spiritual equality of women and men.",
+      "correction": "Sikh doctrine affirms equality; women participate in Amrit, seva, and sangat.",
+      "source_refs": ["hist:women", "rehat:no-caste"]
+    },
+    {
+      "id": "kf-009",
+      "claim_pattern": "Gurbani promotes hatred against other communities",
+      "category": "out_of_context",
+      "explanation": "Selective quoting often strips verses from their spiritual context about ego, tyranny, or devotion.",
+      "correction": "Read the full shabad and established translations; Gurbani centers Naam, justice, and universal dignity.",
+      "source_refs": ["gurbani:no-hate"]
+    },
+    {
+      "id": "kf-010",
+      "claim_pattern": "Langar is only for Sikhs / foreigners are not allowed",
+      "category": "rehat",
+      "explanation": "Guru ka Langar is historically and doctrinally open without distinction of background.",
+      "correction": "Langar welcomes all; eating together without status distinction is a core Sikh institution.",
+      "source_refs": ["rehat:langar"]
+    },
+    {
+      "id": "kf-011",
+      "claim_pattern": "Sikhs worship idols / statues of Gurus as deities",
+      "category": "rehat",
+      "explanation": "Rehat centers devotion on Ik Onkar and Guru Granth Sahib, not idol worship.",
+      "correction": "Mainstream Sikh practice does not endorse idol worship; the Guru Granth Sahib is the eternal Guru.",
+      "source_refs": ["rehat:no-idol"]
+    },
+    {
+      "id": "kf-012",
+      "claim_pattern": "Operation Blue Star proves Sikhism is inherently violent",
+      "category": "propaganda",
+      "explanation": "Collective guilt narratives about a modern political-military event are not evidence about Sikh doctrine.",
+      "correction": "Discuss 1984 with careful historical sourcing; do not collapse doctrine into propaganda slogans.",
+      "source_refs": ["hist:1984"]
+    },
+    {
+      "id": "kf-013",
+      "claim_pattern": "Guru Nanak said Sikhs should abandon Gurmukhi and only use another language",
+      "category": "gurbani_misquote",
+      "explanation": "Fabricated Guru quotes about abandoning Gurmukhi are not found in authentic scripture indexes.",
+      "correction": "Check any attributed quote via BaniDB/GurbaniNow before accepting it.",
+      "source_refs": ["hist:punjabi-language", "gurbani:attribution"]
+    },
+    {
+      "id": "kf-014",
+      "claim_pattern": "Amrit and Rehat rules against tobacco were invented recently for politics",
+      "category": "rehat",
+      "explanation": "Bajjar kurehits including tobacco prohibition are part of established Amritdhari discipline.",
+      "correction": "Rehat Maryada documents personal discipline including prohibitions for Amritdhari Sikhs.",
+      "source_refs": ["rehat:tobacco", "rehat:bani"]
+    },
+    {
+      "id": "kf-015",
+      "claim_pattern": "This viral shabad is from Ang 2000 of Guru Granth Sahib",
+      "category": "gurbani_misquote",
+      "explanation": "Ang 2000 does not exist in the standard 1430-Ang Guru Granth Sahib.",
+      "correction": "Valid Ang citations are between 1 and 1430; verify with BaniDB.",
+      "source_refs": ["gurbani:ang-range"]
+    },
+    {
+      "id": "kf-016",
+      "claim_pattern": "Sikh Gurus taught that caste names determine spiritual rank",
+      "category": "propaganda",
+      "explanation": "Opposite of Gurbani's egalitarian teaching.",
+      "correction": "Spiritual worth in Sikh teaching is not based on caste hierarchy.",
+      "source_refs": ["rehat:no-caste"]
+    },
+    {
+      "id": "kf-017",
+      "claim_pattern": "Guru Arjan Dev Ji never compiled any scripture",
+      "category": "historical",
+      "explanation": "Denial of Adi Granth compilation contradicts established Sikh history.",
+      "correction": "Guru Arjan Dev Ji compiled the Adi Granth in 1604.",
+      "source_refs": ["hist:sggs"]
+    },
+    {
+      "id": "kf-018",
+      "claim_pattern": "Kirpan is proof that Sikhism mandates attacking civilians",
+      "category": "propaganda",
+      "explanation": "The kirpan is an article of faith tied to responsibility and defense of righteousness, not a license for aggression.",
+      "correction": "Kirpan is one of the Five Kakaars; conflating it with terrorism is a propaganda distortion.",
+      "source_refs": ["rehat:5ks"]
+    },
+    {
+      "id": "kf-019",
+      "claim_pattern": "Mul Mantar was changed by SGPC and original was different political slogan",
+      "category": "gurbani_misquote",
+      "explanation": "Conspiracy variants of Mul Mantar circulating online are fabricated.",
+      "correction": "Mul Mantar on Ang 1 is stable in standard Guru Granth Sahib; verify via BaniDB.",
+      "source_refs": ["gurbani:mul-mantar"]
+    },
+    {
+      "id": "kf-020",
+      "claim_pattern": "Sikhism forbids education and modern medicine according to Gurbani",
+      "category": "propaganda",
+      "explanation": "No such doctrinal ban exists; this is a fabricated restriction narrative.",
+      "correction": "Sikh history includes learning, seva, and institutions for community welfare; treat medical-ban claims as false.",
+      "source_refs": ["hist:nanak"]
+    },
+    {
+      "id": "kf-021",
+      "claim_pattern": "Guru Tegh Bahadur Ji's martyrdom story is fake colonial propaganda",
+      "category": "historical",
+      "explanation": "Denial of Guru Tegh Bahadur Ji's martyrdom is a revisionist misinformation pattern.",
+      "correction": "Sikh tradition and historical sources affirm Guru Tegh Bahadur Ji's martyrdom in defense of religious freedom.",
+      "source_refs": ["hist:gurus"]
+    },
+    {
+      "id": "kf-022",
+      "claim_pattern": "Taking photos of Guru Granth Sahib parkash and editing fake Gurmukhi overlays is fine for memes",
+      "category": "out_of_context",
+      "explanation": "Edited overlays often insert fabricated lines while using sacred imagery for credibility.",
+      "correction": "Always OCR/transcribe and verify overlays against BaniDB before trusting meme posts.",
+      "source_refs": ["gurbani:no-hate", "gurbani:attribution"]
+    }
+  ]
+}
