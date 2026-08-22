@@ -65,12 +65,6 @@ export default function CasePage() {
   }
 
   const processing = ACTIVE.has(data.status);
-  const onlyClaimSummary = data.claims.length === 1 ? data.claims[0]?.summary : null;
-  const showOverallWriteup = Boolean(
-    data.overall_summary &&
-      data.overall_summary !== onlyClaimSummary &&
-      !(onlyClaimSummary && data.overall_summary.startsWith(onlyClaimSummary.slice(0, 60)))
-  );
 
   return (
     <section className="section">
@@ -109,32 +103,9 @@ export default function CasePage() {
 
         {!processing ? (
           <>
-            <div className="panel" style={{ marginBottom: "1rem" }}>
-              <div className="verdict-row">
-                <span className={`badge ${data.overall_verdict || "unverified"}`}>
-                  {(data.overall_verdict || "unknown").replaceAll("_", " ")}
-                </span>
-                {data.overall_confidence != null ? (
-                  <span className="badge">confidence {(data.overall_confidence * 100).toFixed(0)}%</span>
-                ) : null}
-                <span className="badge">{data.status.replaceAll("_", " ")}</span>
-              </div>
-              {showOverallWriteup ? (
-                <p style={{ margin: 0 }}>{data.overall_summary || data.error_message}</p>
-              ) : data.error_message ? (
-                <p style={{ margin: 0 }}>{data.error_message}</p>
-              ) : (
-                <p className="muted" style={{ margin: 0 }}>
-                  {data.claims.length} claim{data.claims.length === 1 ? "" : "s"} assessed. Full explanation is
-                  on the card below.
-                </p>
-              )}
-              {data.source_url ? (
-                <p className="muted" style={{ marginBottom: 0 }}>
-                  Source: {data.source_url}
-                </p>
-              ) : null}
-            </div>
+            {data.error_message && data.claims.length === 0 ? (
+              <p style={{ color: "var(--danger)" }}>{data.error_message}</p>
+            ) : null}
 
             <div className="verdict-stack">
               {data.claims.map((claim) => (
