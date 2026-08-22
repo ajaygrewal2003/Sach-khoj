@@ -151,9 +151,6 @@ def _aggregate(verdicts, ingest: dict[str, Any]) -> tuple[str, float, str]:
     false_count = sum(1 for v in verdicts if v.verdict in {"false", "misleading"})
     true_count = sum(1 for v in verdicts if v.verdict == "true")
 
-    if len(verdicts) == 1:
-        return top.verdict, round(avg_conf, 3), verdicts[0].summary
-
     if false_count:
         summary = (
             f"Found {false_count} claim(s) assessed as false or misleading out of {len(verdicts)}. "

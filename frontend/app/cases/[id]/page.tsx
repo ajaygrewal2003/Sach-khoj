@@ -65,6 +65,12 @@ export default function CasePage() {
   }
 
   const processing = ACTIVE.has(data.status);
+  const onlyClaimSummary = data.claims.length === 1 ? data.claims[0]?.summary : null;
+  const showOverallWriteup = Boolean(
+    data.overall_summary &&
+      data.overall_summary !== onlyClaimSummary &&
+      !(onlyClaimSummary && data.overall_summary.startsWith(onlyClaimSummary.slice(0, 60)))
+  );
 
   return (
     <section className="section">
@@ -113,7 +119,16 @@ export default function CasePage() {
                 ) : null}
                 <span className="badge">{data.status.replaceAll("_", " ")}</span>
               </div>
-              <p style={{ margin: 0 }}>{data.overall_summary || data.error_message}</p>
+              {showOverallWriteup ? (
+                <p style={{ margin: 0 }}>{data.overall_summary || data.error_message}</p>
+              ) : data.error_message ? (
+                <p style={{ margin: 0 }}>{data.error_message}</p>
+              ) : (
+                <p className="muted" style={{ margin: 0 }}>
+                  {data.claims.length} claim{data.claims.length === 1 ? "" : "s"} assessed. Full explanation is
+                  on the card below.
+                </p>
+              )}
               {data.source_url ? (
                 <p className="muted" style={{ marginBottom: 0 }}>
                   Source: {data.source_url}
