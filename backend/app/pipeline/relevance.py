@@ -1,10 +1,18 @@
-"""Claim understanding and verse relevance — for every claim, not one topic.
+"""Claim understanding and evidence relevance — general, for ANY claim.
 
-Pipeline for any input:
-1. Understand the claim's real subject (ignore rhetoric like "completely" / "forbids").
-2. Search Gurbani with short subject terms (or skip if Gurbani would not discuss it).
-3. Keep a verse only if it is about that same subject, in the same sense.
-4. Quote only those verses. Wrong Ang is worse than no Ang.
+The intelligence lives in two general mechanisms, not topic lists:
+
+1. `analyze_claim` — the model reads the claim and produces a ClaimBrief:
+   the real subject, what relevant sources would discuss, false-friend
+   senses to avoid, and search terms (synonyms/related concepts). This works
+   for alcohol, meat, caste, history, or a topic nobody anticipated.
+2. `judge_evidence_for_claim` — one general keep/drop judge that scores
+   EVERY candidate evidence item (curated note, known-false pattern, verse)
+   against the brief.
+
+The token heuristics at the top of this file are a degraded FALLBACK for
+running without an API key (tests/CI). They are not the primary path and
+should not be extended topic by topic.
 """
 
 from __future__ import annotations
@@ -22,7 +30,11 @@ from app.services.knowledge_base import (
 )
 from app.services.llm import chat_json, embed_texts
 
-# Rhetoric / intensifiers / generic Sikh vocabulary. Never use these as BaniDB queries.
+# ---------------------------------------------------------------------------
+# Heuristic fallback vocabulary (no-LLM mode only)
+# ---------------------------------------------------------------------------
+
+# Rhetoric / intensifiers / generic Sikh vocabulary. Never useful as searches.
 FILLER_QUERY_TOKENS = {
     "sikh",
     "sikhi",
@@ -87,11 +99,12 @@ FILLER_QUERY_TOKENS = {
     "holy",
     "sacred",
     "spiritual",
+    "spiritually",
     "practice",
     "practices",
 }
 
-# Verbs and generic nouns that should not, by themselves, justify keeping a verse.
+# Verbs and generic nouns that cannot define a subject by themselves.
 FOCUS_DROP = WEAK_SUBJECT_TOKENS | FILLER_QUERY_TOKENS | {
     "eat",
     "eats",
@@ -140,9 +153,10 @@ FOCUS_DROP = WEAK_SUBJECT_TOKENS | FILLER_QUERY_TOKENS | {
     "idea",
     "core",
     "teachings",
+    "harmful",
 }
 
-# Too common to search alone when the claim is not already mapped to a topic.
+# Too common to search alone when nothing better is available.
 SKIP_AS_SOLO_QUERY = FOCUS_DROP | {
     "fire",
     "water",
@@ -178,7 +192,24 @@ SKIP_AS_SOLO_QUERY = FOCUS_DROP | {
     "inherently",
 }
 
-# Ambiguous Gurbani English: the verse must also carry the claim's sense of the word.
+# Generic religious boilerplate: sharing only these words is not a subject match.
+BOILERPLATE_TOKENS = {
+    "sikh",
+    "sikhi",
+    "sikhism",
+    "sikhs",
+    "guru",
+    "gurus",
+    "gurbani",
+    "bani",
+    "rehat",
+    "maryada",
+    "discipline",
+    "amritdhari",
+    "khalsa",
+}
+
+# Ambiguous Gurbani English: the verse must also carry the claim's sense.
 POLYSEMY_CONTEXT: dict[str, frozenset[str]] = {
     "flesh": frozenset(
         {
@@ -217,34 +248,13 @@ POLYSEMY_CONTEXT: dict[str, frozenset[str]] = {
             "features",
         }
     ),
-    "amrit": frozenset({"naam", "ambrosial", "nectar", "baptism", "initiation", "khande", "sword", "immortal"}),
+    "amrit": frozenset(
+        {"naam", "ambrosial", "nectar", "baptism", "initiation", "khande", "sword", "immortal"}
+    ),
 }
 
 _WORD_RE = re.compile(r"[\w\u0A00-\u0A7F]+", re.UNICODE)
 _GURMUKHI_RE = re.compile(r"[\u0A00-\u0A7F]")
-
-SEMANTIC_DROP_BELOW = 0.14
-
-
-@dataclass
-class ClaimBrief:
-    """What the claim is actually about — used for search, keep/drop, and quoting."""
-
-    subject: str
-    about: list[str] = field(default_factory=list)
-    not_about: list[str] = field(default_factory=list)
-    gurbani_relevant: bool = True
-    llm_queries: list[dict[str, str]] = field(default_factory=list)
-    focus_tokens: set[str] = field(default_factory=set)
-
-    def prompt_block(self) -> str:
-        about = ", ".join(self.about) or "(infer from the claim)"
-        not_about = ", ".join(self.not_about) or "filler words and unrelated spiritual catchphrases"
-        return (
-            f"Claim subject: {self.subject}\n"
-            f"A relevant verse would discuss: {about}\n"
-            f"Do NOT quote verses that are really about: {not_about}"
-        )
 
 
 def has_gurmukhi(text: str) -> bool:
@@ -252,7 +262,7 @@ def has_gurmukhi(text: str) -> bool:
 
 
 def claim_focus_tokens(text: str) -> set[str]:
-    """Noun-like subject of the claim — what verses must be about."""
+    """Noun-like subject of the claim — heuristic fallback."""
     core = expand_tokens(core_subject_tokens(text))
     focus = core - FOCUS_DROP
     return focus if focus else core
@@ -272,7 +282,7 @@ def is_filler_query(query: str) -> bool:
 
 
 def is_usable_search_query(query: str, *, claim_focus: set[str], require_focus: bool = True) -> bool:
-    """True if this string is a safe BaniDB search. LLM queries must not be filler."""
+    """True if this string is a safe BaniDB search."""
     query = (query or "").strip()
     if is_filler_query(query):
         return False
@@ -285,17 +295,156 @@ def is_usable_search_query(query: str, *, claim_focus: set[str], require_focus: 
     return True
 
 
-def verse_matches_claim(claim_text: str, translation: str = "", excerpt: str = "") -> bool:
-    """Hard floor for any claim: same subject, same sense — not a shared filler word."""
-    blob = f"{translation or ''} {excerpt or ''}"
-    if not blob.strip():
+# ---------------------------------------------------------------------------
+# ClaimBrief — the model's understanding of the claim
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ClaimBrief:
+    """What the claim is actually about — drives search, keep/drop, and quoting."""
+
+    subject: str
+    about: list[str] = field(default_factory=list)
+    not_about: list[str] = field(default_factory=list)
+    gurbani_relevant: bool = True
+    llm_queries: list[dict[str, str]] = field(default_factory=list)
+    # Model-proposed synonyms / related concepts (alcohol→intoxicants/wine, …).
+    search_terms: list[str] = field(default_factory=list)
+    focus_tokens: set[str] = field(default_factory=set)
+
+    def prompt_block(self) -> str:
+        about = ", ".join(self.about) or "(infer from the claim)"
+        not_about = ", ".join(self.not_about) or "filler words and unrelated spiritual catchphrases"
+        terms = ", ".join(self.search_terms) or "(none)"
+        return (
+            f"Claim subject: {self.subject}\n"
+            f"A relevant source would discuss: {about}\n"
+            f"Related terms: {terms}\n"
+            f"Do NOT use material that is really about: {not_about}"
+        )
+
+    def expanded_query(self, claim_text: str) -> str:
+        """Claim plus related concepts — for meaning-based corpus retrieval."""
+        extras = " ".join([*self.search_terms, *self.about])
+        return f"{claim_text} {self.subject} {extras}".strip()
+
+    def effective_focus(self) -> set[str]:
+        """Subject tokens including model-proposed related nouns (general)."""
+        base = set(self.focus_tokens)
+        for phrase in [self.subject, *self.search_terms, *self.about]:
+            base |= expand_tokens(core_subject_tokens(phrase))
+        trimmed = base - FOCUS_DROP
+        return trimmed if trimmed else base
+
+
+def _heuristic_brief(claim_text: str) -> ClaimBrief:
+    focus = claim_focus_tokens(claim_text)
+    subject = " ".join(sorted(focus)[:8]) if focus else (claim_text[:80] or "unspecified")
+    return ClaimBrief(
+        subject=subject,
+        about=sorted(focus)[:12],
+        not_about=[
+            "intensifiers like completely/totally",
+            "generic lines about the Lord saving or fulfilling someone",
+        ],
+        gurbani_relevant=bool(focus),
+        llm_queries=[],
+        search_terms=[],
+        focus_tokens=focus,
+    )
+
+
+async def analyze_claim(claim_text: str) -> ClaimBrief:
+    """Understand ANY claim before searching — the general entry point."""
+    heuristic = _heuristic_brief(claim_text)
+    data = await chat_json(
+        (
+            "You prepare research for fact-checking ONE claim about Sikhi. "
+            "It may be about anything: scripture, Rehat, history, diet, alcohol, gender, "
+            "politics, customs, or a topic nobody anticipated. If the input is a question, "
+            "treat it as the factual claim being asked about. "
+            "Return ONLY JSON: "
+            '{"subject": "the real topic in 4-10 words", '
+            '"about": ["what a genuinely relevant source (Gurbani verse, Rehat clause, history note) would discuss"], '
+            '"not_about": ["false-friend themes the same words might wrongly match"], '
+            '"search_terms": ["synonyms and related concepts, e.g. alcohol -> intoxicants, wine, liquor"], '
+            '"gurbani_relevant": true, '
+            '"queries": [{"q": "wine", "lang": "en"}]}. '
+            "subject = the real issue, NOT rhetoric (completely, forbids, always, never). "
+            "queries are 1-3 word strings likely to appear IN a Guru Granth Sahib verse about "
+            "this subject (concrete nouns; Gurmukhi headwords welcome). "
+            "Never use filler as a query: completely, totally, forbids, Lord, Guru, saved, "
+            "fulfilled, Sikh, God. "
+            "gurbani_relevant=false when scripture would not discuss it "
+            "(modern dates, British politics, census figures, org procedures)."
+        ),
+        f"Claim:\n{claim_text[:1500]}",
+        max_tokens=600,
+    )
+    if not data:
+        return heuristic
+
+    queries: list[dict[str, str]] = []
+    for item in data.get("queries") or []:
+        q = (item.get("q") or "").strip()
+        lang = (item.get("lang") or "en").lower()
+        if not q or len(q.split()) > 3:
+            continue
+        queries.append({"q": q, "lang": lang})
+
+    about = [str(x).strip() for x in (data.get("about") or []) if str(x).strip()]
+    not_about = [str(x).strip() for x in (data.get("not_about") or []) if str(x).strip()]
+    search_terms = [str(x).strip() for x in (data.get("search_terms") or []) if str(x).strip()][:12]
+    return ClaimBrief(
+        subject=(data.get("subject") or heuristic.subject)[:160],
+        about=about or heuristic.about,
+        not_about=not_about or heuristic.not_about,
+        gurbani_relevant=bool(data.get("gurbani_relevant", True)),
+        llm_queries=queries,
+        search_terms=search_terms,
+        focus_tokens=heuristic.focus_tokens,
+    )
+
+
+async def understand_claim_subject(claim_text: str) -> dict[str, Any]:
+    """Back-compat wrapper used by query planning."""
+    brief = await analyze_claim(claim_text)
+    return {
+        "subject": brief.subject,
+        "gurbani_relevant": brief.gurbani_relevant,
+        "queries": brief.llm_queries,
+        "about": brief.about,
+        "not_about": brief.not_about,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Lexical fallback gate (no-LLM mode) — general rules, not topic rules
+# ---------------------------------------------------------------------------
+
+
+def passage_matches_claim(
+    claim_text: str,
+    passage: str,
+    brief: ClaimBrief | None = None,
+) -> bool:
+    """Fallback gate: passage must share the claim's distinctive subject, same sense."""
+    blob = (passage or "").strip()
+    if not blob:
         return False
-    claim_raw = core_subject_tokens(claim_text) - FOCUS_DROP
-    if not claim_raw:
-        claim_raw = core_subject_tokens(claim_text)
-    focus = expand_tokens(claim_raw)
-    verse_core = expand_tokens(core_subject_tokens(blob))
-    if not (focus & verse_core):
+    if brief is not None:
+        focus = brief.effective_focus()
+    else:
+        claim_raw = core_subject_tokens(claim_text) - FOCUS_DROP
+        if not claim_raw:
+            claim_raw = core_subject_tokens(claim_text)
+        focus = expand_tokens(claim_raw)
+    if not focus:
+        return False
+    passage_core = expand_tokens(core_subject_tokens(blob))
+    meaningful = (focus & passage_core) - BOILERPLATE_TOKENS
+    if not meaningful:
         return False
     return _same_sense(focus, blob)
 
@@ -313,91 +462,108 @@ def _same_sense(focus: set[str], blob: str) -> bool:
     return True
 
 
-def filter_verses_for_claim(claim_text: str, verses: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Drop verses that only share rhetoric (completely, Lord, saved, fulfilled)."""
-    kept: list[dict[str, Any]] = []
-    for verse in verses:
-        if verse_matches_claim(
-            claim_text,
-            translation=str(verse.get("translation") or ""),
-            excerpt=str(verse.get("excerpt") or ""),
-        ):
-            kept.append(verse)
-    return kept
+def verse_matches_claim(claim_text: str, translation: str = "", excerpt: str = "") -> bool:
+    """Fallback verse gate: same subject, same sense — not a shared filler word."""
+    return passage_matches_claim(claim_text, f"{translation or ''} {excerpt or ''}")
 
 
-def _heuristic_brief(claim_text: str) -> ClaimBrief:
-    focus = claim_focus_tokens(claim_text)
-    subject = " ".join(sorted(focus)[:8]) if focus else (claim_text[:80] or "unspecified")
-    return ClaimBrief(
-        subject=subject,
-        about=sorted(focus)[:12],
-        not_about=[
-            "intensifiers like completely/totally",
-            "generic lines about the Lord saving or fulfilling someone",
-        ],
-        gurbani_relevant=bool(focus),
-        llm_queries=[],
-        focus_tokens=focus,
+def _item_text(item: dict[str, Any]) -> str:
+    blob = (
+        f"{item.get('reference') or ''} {item.get('excerpt') or ''} "
+        f"{item.get('translation') or ''} {item.get('category') or ''}"
     )
+    if item.get("source") == "Known False Claims Index":
+        meta = item.get("meta") or {}
+        blob = f"{blob} {meta.get('claim_pattern') or ''} {meta.get('explanation') or ''}"
+    return blob
 
 
-async def analyze_claim(claim_text: str) -> ClaimBrief:
-    """Understand ANY claim before searching — subject, relevant verse themes, search terms."""
-    heuristic = _heuristic_brief(claim_text)
+def filter_passages_for_claim(
+    claim_text: str,
+    items: list[dict[str, Any]],
+    brief: ClaimBrief | None = None,
+) -> list[dict[str, Any]]:
+    """Fallback filter over any evidence rows."""
+    return [item for item in items if passage_matches_claim(claim_text, _item_text(item), brief=brief)]
+
+
+def filter_verses_for_claim(claim_text: str, verses: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Fallback filter for verses only (kept for tests/back-compat)."""
+    return filter_passages_for_claim(claim_text, verses)
+
+
+# ---------------------------------------------------------------------------
+# General judge — the primary gate for every evidence item, any topic
+# ---------------------------------------------------------------------------
+
+
+async def judge_evidence_for_claim(
+    claim_text: str,
+    items: list[dict[str, Any]],
+    brief: ClaimBrief | None = None,
+) -> list[dict[str, Any]]:
+    """One general keep/drop over ALL candidate evidence (notes, patterns, verses).
+
+    LLM decides relevance from meaning. Without a key, falls back to the
+    lexical subject gate. Kept items are marked judged=True.
+    """
+    if not items:
+        return []
+    brief = brief or _heuristic_brief(claim_text)
+
+    compact = [
+        {
+            "id": item.get("id"),
+            "source": item.get("source"),
+            "reference": item.get("reference"),
+            "text": _item_text(item)[:320],
+        }
+        for item in items
+    ]
     data = await chat_json(
         (
-            "You are a Sikh studies research assistant preparing a Gurbani search. "
-            "This must work for ANY claim (diet, caste, history, Rehat, gender, ritual, quotes, novel topics). "
-            "Return ONLY JSON: "
-            '{"subject": "short topic in 4-10 words", '
-            '"about": ["what a relevant Guru Granth verse would actually discuss"], '
-            '"not_about": ["false-friend themes the same English word might hit"], '
-            '"gurbani_relevant": true, '
-            '"queries": [{"q": "eat meat", "lang": "en"}]}. '
-            "subject = the real issue, NOT rhetoric (completely, forbids, always, never). "
-            "Each q is 1-3 words that would appear IN a verse about that subject. "
-            "Prefer concrete nouns and, when useful, Gurmukhi headwords. "
-            "Never use filler: completely, totally, forbids, Lord, Guru, saved, fulfilled, Sikh, God. "
-            "If Sri Guru Granth Sahib Ji would not discuss this (modern dates, British politics, "
-            "census figures), set gurbani_relevant false and queries []."
+            "You are gating evidence for a fact-check about Sikhi. "
+            "This applies to ANY claim on ANY topic. "
+            "KEEP an item only if it directly supports, refutes, or contextualizes THIS claim's "
+            "actual subject — a careful researcher would cite it for this claim. "
+            "DROP items that merely share filler words (completely, totally, Lord, saved, "
+            "fulfilled), share only generic Sikh vocabulary (Sikh, Guru, Rehat Maryada), use a "
+            "word in a different sense, or address a different topic entirely "
+            "(e.g. a meat/diet note is NOT evidence about alcohol; an education note is NOT "
+            "evidence about meat). "
+            'Return ONLY JSON {"keep_ids": ["id", ...]}. Keep nothing if nothing is on-topic.'
         ),
-        f"Claim:\n{claim_text[:1500]}\nHeuristic focus tokens: {sorted(heuristic.focus_tokens)}",
+        f"{brief.prompt_block()}\nClaim: {claim_text[:1500]}\nCandidates: {compact}",
         max_tokens=500,
     )
-    if not data:
-        return heuristic
-
-    queries: list[dict[str, str]] = []
-    for item in data.get("queries") or []:
-        q = (item.get("q") or "").strip()
-        lang = (item.get("lang") or "en").lower()
-        if not q or len(q.split()) > 3:
-            continue
-        queries.append({"q": q, "lang": lang})
-
-    about = [str(x).strip() for x in (data.get("about") or []) if str(x).strip()]
-    not_about = [str(x).strip() for x in (data.get("not_about") or []) if str(x).strip()]
-    return ClaimBrief(
-        subject=(data.get("subject") or heuristic.subject)[:160],
-        about=about or heuristic.about,
-        not_about=not_about or heuristic.not_about,
-        gurbani_relevant=bool(data.get("gurbani_relevant", True)),
-        llm_queries=queries,
-        focus_tokens=heuristic.focus_tokens,
-    )
+    if data is None:
+        kept = filter_passages_for_claim(claim_text, items, brief=brief)
+    else:
+        keep = {str(x) for x in (data.get("keep_ids") or [])}
+        kept = [item for item in items if str(item.get("id")) in keep]
+    return [{**item, "judged": True} for item in kept]
 
 
-async def understand_claim_subject(claim_text: str) -> dict[str, Any]:
-    """Back-compat wrapper used by query planning."""
-    brief = await analyze_claim(claim_text)
-    return {
-        "subject": brief.subject,
-        "gurbani_relevant": brief.gurbani_relevant,
-        "queries": brief.llm_queries,
-        "about": brief.about,
-        "not_about": brief.not_about,
-    }
+async def judge_verses_for_claim(
+    claim_text: str,
+    verses: list[dict[str, Any]],
+    brief: ClaimBrief | None = None,
+) -> list[dict[str, Any]]:
+    """Back-compat wrapper: judge scripture rows with the general judge."""
+    lexical_floor = filter_passages_for_claim(claim_text, verses, brief=brief)
+    if not lexical_floor and brief is not None and brief.search_terms:
+        # The model's related terms may legitimately match where claim words don't.
+        lexical_floor = verses
+    if not lexical_floor:
+        return []
+    return await judge_evidence_for_claim(claim_text, lexical_floor, brief)
+
+
+# ---------------------------------------------------------------------------
+# Semantic similarity utilities
+# ---------------------------------------------------------------------------
+
+SEMANTIC_DROP_BELOW = 0.14
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -416,7 +582,7 @@ async def rerank_verses_semantically(
     verses: list[dict[str, Any]],
     brief: ClaimBrief | None = None,
 ) -> list[dict[str, Any]]:
-    """General semantic gate: drop verses whose meaning is far from the claim subject."""
+    """Semantic sanity gate: drop items whose meaning is far from the claim subject."""
     if not verses:
         return []
     subject = brief.subject if brief else claim_text[:200]
@@ -434,42 +600,3 @@ async def rerank_verses_semantically(
             scored.append((sim, item))
     scored.sort(key=lambda x: x[0], reverse=True)
     return [item for _, item in scored]
-
-
-async def judge_verses_for_claim(
-    claim_text: str,
-    verses: list[dict[str, Any]],
-    brief: ClaimBrief | None = None,
-) -> list[dict[str, Any]]:
-    """LLM keep/drop on top of the lexical floor. Cannot override a lexical reject."""
-    lexical = filter_verses_for_claim(claim_text, verses)
-    if not lexical:
-        return []
-    compact = [
-        {
-            "id": v.get("id"),
-            "reference": v.get("reference"),
-            "translation": (v.get("translation") or "")[:280],
-        }
-        for v in lexical
-    ]
-    brief = brief or _heuristic_brief(claim_text)
-    data = await chat_json(
-        (
-            "You are a careful Gurbani research assistant. This filter applies to EVERY kind of claim. "
-            "Keep a verse ONLY if a knowledgeable reader would cite it for THIS claim's subject, "
-            "in the same sense of the words. "
-            "Reject: filler-word hits (completely, totally, Lord, saved, fulfilled); "
-            "wrong sense (flesh as the body vs flesh as food; form as shape vs formless God); "
-            "and any other different topic. "
-            'Return JSON {"keep_ids": ["id", ...]}.'
-        ),
-        f"{brief.prompt_block()}\nClaim: {claim_text[:1500]}\nVerses: {compact}",
-        max_tokens=400,
-    )
-    if not data:
-        return lexical
-    keep = {str(x) for x in (data.get("keep_ids") or [])}
-    if not keep:
-        return []
-    return [v for v in lexical if str(v.get("id")) in keep]

@@ -23,6 +23,7 @@ Return ONLY valid JSON matching:
 }
 Rules:
 - Split mixed posts into separate verifiable factual claims.
+- If the input is a QUESTION ("Does Sikhi allow X?"), convert it into the factual claim being asked about ("Sikhi allows X") so it can be checked.
 - Skip pure opinion unless it asserts a false factual premise.
 - Prefer category doctrine for teachings about Naam, mukti, rituals, Hukam, pilgrimage, diet/meat, or Rehat-as-salvation claims.
 - Prefer category gurbani_misquote when a verse/Ang/Guru attribution is asserted.
@@ -40,6 +41,7 @@ Return ONLY valid JSON matching:
 }
 Rules:
 - You MUST only cite evidence_ids that appear in the provided evidence list.
+- verdict judges THE CLAIM AS WRITTEN, not the underlying doctrine. If the claim asserts X and sources show not-X, verdict is false even when your summary correctly explains the real teaching. Example: claim "Sikhs worship idols" + evidence "Sikhi rejects idol worship" = false, NOT true.
 - Verdict true means the USER CLAIM is accurate. If the claim is wrong, overstated, or fabricated, use false or misleading — never true.
 - If a Known False Claims Index row is on-topic, the claim is not true.
 - Cite a passage only if it is about the same topic as the claim. Off-topic passages (wrong subject) are not evidence.

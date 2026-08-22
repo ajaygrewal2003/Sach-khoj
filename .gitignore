@@ -19,5 +19,6 @@ uploads/
 coverage/
 htmlcov/
 backend/.eval/
+backend/.cache/
 .turbo/
 *.tsbuildinfo

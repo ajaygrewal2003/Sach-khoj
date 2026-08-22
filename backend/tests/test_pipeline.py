@@ -19,6 +19,7 @@ from app.pipeline.retrieve import retrieve_evidence
 from app.pipeline.verify import _heuristic_verify
 from app.schemas import ExtractedClaim
 from app.services.knowledge_base import KnowledgeBase, reset_knowledge_base
+from app.services.semantic_index import reset_semantic_index
 
 
 @pytest.fixture(autouse=True)
@@ -34,9 +35,11 @@ def _test_env(tmp_path, monkeypatch):
     monkeypatch.setenv("ADMIN_TOKEN", "test-admin")
     get_settings.cache_clear()
     reset_knowledge_base()
+    reset_semantic_index()
     yield
     get_settings.cache_clear()
     reset_knowledge_base()
+    reset_semantic_index()
 
 
 @pytest.mark.asyncio

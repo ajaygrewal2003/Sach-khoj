@@ -81,6 +81,8 @@ async def _llm_verify(
     verdict = _coerce_verdict(data.get("verdict"))
     confidence = _coerce_confidence(data.get("confidence"), default=0.5)
     summary = (data.get("summary") or "Assessment complete.").strip()
+    verdict = await _consistency_check(claim.text, summary, verdict)
+    # Deterministic guard runs LAST: explicit refutation in the write-up wins.
     verdict = _align_verdict_with_writeup(verdict, summary)
 
     if verdict in {"false", "misleading", "true"} and not cited_ids:
@@ -103,7 +105,8 @@ async def _llm_verify(
         for e in on_topic
         if e.get("source") in {"BaniDB", "GurbaniNow"}
         and (
-            e.get("match_reason") in {"named_ang", "quoted_scripture"}
+            e.get("judged")
+            or e.get("match_reason") in {"named_ang", "quoted_scripture"}
             or verse_matches_claim(
                 claim.text,
                 translation=str(e.get("translation") or ""),
@@ -246,7 +249,7 @@ def _gurbani_quote_lines(items: list[dict[str, Any]], claim_text: str, *, limit:
     for item in items:
         if item.get("source") not in {"BaniDB", "GurbaniNow"}:
             continue
-        if item.get("match_reason") not in {"named_ang", "quoted_scripture"}:
+        if not item.get("judged") and item.get("match_reason") not in {"named_ang", "quoted_scripture"}:
             if not verse_matches_claim(
                 claim_text,
                 translation=str(item.get("translation") or ""),
@@ -306,19 +309,24 @@ def _ensure_gurbani_in_explanation(
 
 
 def _on_topic_evidence(claim: ExtractedClaim, evidence: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Drop passages that are clearly about a different subject than the claim."""
+    """Drop passages that are clearly about a different subject than the claim.
+
+    Retrieval already gates with the general judge; judged and user-quoted rows
+    pass straight through. The lexical rules below only apply to ungated rows
+    (legacy callers and no-LLM tests).
+    """
     from app.services.knowledge_base import topical_overlap
 
     query = claim.text + " " + (claim.quoted_gurbani or "")
     kept: list[dict[str, Any]] = []
     for item in evidence:
+        if item.get("judged") or item.get("match_reason") in {"named_ang", "quoted_scripture"}:
+            kept.append(item)
+            continue
         if item.get("source") == "Known False Claims Index":
             kept.append(item)
             continue
         if item.get("source") in {"BaniDB", "GurbaniNow"}:
-            if item.get("match_reason") in {"named_ang", "quoted_scripture"}:
-                kept.append(item)
-                continue
             if verse_matches_claim(
                 claim.text,
                 translation=str(item.get("translation") or ""),
@@ -352,7 +360,7 @@ def _to_evidence_item(raw: dict[str, Any]) -> EvidenceItem:
 
 
 def _align_verdict_with_writeup(verdict: VerdictType, summary: str) -> VerdictType:
-    """If the write-up says the claim is wrong, do not leave verdict=true."""
+    """Regex fallback: if the write-up says the claim is wrong, do not leave verdict=true."""
     if verdict != "true":
         return verdict
     head = (summary or "")[:280]
@@ -367,6 +375,44 @@ def _align_verdict_with_writeup(verdict: VerdictType, summary: str) -> VerdictTy
     if re.search(r"\b(the claim.{0,40}is\s+misleading)\b", head, re.I):
         return "misleading"
     return verdict
+
+
+async def _consistency_check(claim_text: str, summary: str, verdict: VerdictType) -> VerdictType:
+    """General polarity check: does the label match what the assessment concludes?
+
+    The verifier sometimes labels the DOCTRINE instead of the CLAIM
+    ("Sikhs must fast during Ramadan" -> summary refutes it -> verdict 'true').
+    Asking for a STANCE (supports/refutes) is much harder to confuse than
+    asking for the label directly.
+    """
+    if verdict not in {"true", "false", "misleading"} or not summary:
+        return verdict
+    data = await chat_json(
+        (
+            "You compare a CLAIM with an ASSESSMENT someone wrote about it. "
+            "Decide the assessment's stance toward the claim AS WRITTEN. "
+            'Return ONLY JSON {"stance": "supports|refutes|partially_supports|cannot_tell"}. '
+            "supports = the assessment concludes the claim as written is accurate. "
+            "refutes = the assessment concludes the claim as written is wrong, inaccurate, "
+            "fabricated, or a misrepresentation. "
+            "partially_supports = right in part but overstated or framed wrong. "
+            "cannot_tell = the assessment does not settle it."
+        ),
+        f"CLAIM: {claim_text[:800]}\n\nASSESSMENT: {summary[:1500]}",
+        max_tokens=40,
+    )
+    if not data:
+        return verdict
+    stance = str(data.get("stance") or "").strip().lower()
+    mapping: dict[str, VerdictType] = {
+        "supports": "true",
+        "refutes": "false",
+        "partially_supports": "misleading",
+    }
+    checked = mapping.get(stance)
+    if checked is None:
+        return verdict
+    return checked
 
 
 def _coerce_verdict(value: Any) -> VerdictType:

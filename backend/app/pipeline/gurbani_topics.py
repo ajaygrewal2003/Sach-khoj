@@ -285,4 +285,14 @@ async def scripture_queries_for_claim(
         add(q, searchtype, "llm")
         if len(queries) >= 6:
             break
+
+    # Model-proposed related terms (alcohol -> wine/intoxication) work for any topic.
+    for term in getattr(understood, "search_terms", []) or []:
+        if len(queries) >= 6:
+            break
+        term = (term or "").strip()
+        if not term or len(term.split()) > 3:
+            continue
+        searchtype = 2 if has_gurmukhi(term) else 3
+        add(term, searchtype, "brief")
     return queries[:6]
