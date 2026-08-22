@@ -38,7 +38,8 @@ async def submit_case(
     if media is not None and media.filename:
         data = await media.read()
         if len(data) > settings.max_upload_bytes:
-            raise HTTPException(status_code=400, detail="Upload exceeds 15MB limit.")
+            limit_mb = settings.max_upload_bytes // (1024 * 1024)
+            raise HTTPException(status_code=400, detail=f"Upload exceeds {limit_mb}MB limit.")
         safe_name = _safe_filename(media.filename)
         settings.upload_path.mkdir(parents=True, exist_ok=True)
         dest = settings.upload_path / f"{uuid.uuid4().hex}_{safe_name}"

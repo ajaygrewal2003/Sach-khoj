@@ -23,6 +23,7 @@ Return ONLY valid JSON matching:
 }
 Rules:
 - Split mixed posts into separate verifiable factual claims.
+- Input may include labeled sections from a video: [Post title], [Post caption], [Spoken transcript], [On-screen visuals and text], [Image content]. Treat spoken and on-screen assertions as claims exactly like written text.
 - If the input is a QUESTION ("Does Sikhi allow X?"), convert it into the factual claim being asked about ("Sikhi allows X") so it can be checked.
 - Skip pure opinion unless it asserts a false factual premise.
 - Prefer category doctrine for teachings about Naam, mukti, rituals, Hukam, pilgrimage, diet/meat, or Rehat-as-salvation claims.

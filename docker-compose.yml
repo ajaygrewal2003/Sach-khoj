@@ -30,6 +30,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SOCIAL_COOKIES_FILE: ${SOCIAL_COOKIES_FILE:-}
       CORS_ORIGINS: http://localhost:3000,http://frontend:3000
       UPLOAD_DIR: /app/uploads
       CURATED_DATA_DIR: /app/data/curated

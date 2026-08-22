@@ -402,6 +402,79 @@ def test_golden_set_shapes():
                 assert verdict.verdict in ex["expected_verdict"]
 
 
+def test_media_url_detection():
+    from app.integrations.social_media import is_media_url, media_kind
+
+    assert is_media_url("https://www.instagram.com/reel/Cxyz123/")
+    assert is_media_url("https://www.facebook.com/watch/?v=123")
+    assert is_media_url("https://fb.watch/abc/")
+    assert is_media_url("https://www.tiktok.com/@user/video/123")
+    assert is_media_url("https://youtu.be/dQw4w9WgXcQ")
+    assert is_media_url("https://x.com/user/status/123")
+    assert not is_media_url("https://www.sikhnet.com/news/article")
+    assert not is_media_url("https://example.com/blog")
+    assert media_kind("clip.mp4") == "video"
+    assert media_kind("post.jpg") == "image"
+    assert media_kind("doc.pdf") is None
+
+
+@pytest.mark.asyncio
+async def test_ingest_social_url_composes_sections(monkeypatch):
+    from app.pipeline import ingest as ingest_mod
+
+    async def fake_download(url):
+        return {
+            "ok": True,
+            "media_path": "/tmp/fake.mp4",
+            "media_kind": "video",
+            "title": "Is Sikhism just Hinduism?",
+            "description": "Watch till the end!",
+            "uploader": "some_page",
+            "duration": 42,
+            "message": None,
+        }
+
+    async def fake_understand(path, log):
+        return [
+            "[Spoken transcript] Sikhism is just a sect of Hinduism.",
+            "[On-screen visuals and text] Text overlay: SIKHISM = HINDUISM?",
+        ]
+
+    monkeypatch.setattr(ingest_mod, "download_social_media", fake_download)
+    monkeypatch.setattr(ingest_mod, "_understand_media_file", fake_understand)
+
+    result = await ingest_mod.ingest_submission(url="https://www.instagram.com/reel/abc/")
+    text = result["extracted_text"]
+    assert "[Post title] Is Sikhism just Hinduism?" in text
+    assert "[Spoken transcript] Sikhism is just a sect of Hinduism." in text
+    assert "SIKHISM = HINDUISM?" in text
+    assert result["blocked"] is False
+    assert result["page_metadata"]["media_kind"] == "video"
+
+
+@pytest.mark.asyncio
+async def test_ingest_social_url_blocked_gives_guidance(monkeypatch):
+    from app.pipeline import ingest as ingest_mod
+
+    async def fake_download(url):
+        return {
+            "ok": False,
+            "media_path": None,
+            "media_kind": None,
+            "title": None,
+            "description": "",
+            "uploader": None,
+            "duration": None,
+            "message": "Automated download failed: login required.",
+        }
+
+    monkeypatch.setattr(ingest_mod, "download_social_media", fake_download)
+    result = await ingest_mod.ingest_submission(url="https://www.instagram.com/reel/blocked/")
+    assert result["blocked"] is True
+    assert "login required" in (result["message"] or "")
+    assert result["extracted_text"] == ""
+
+
 def test_live_eval_fixtures_well_formed():
     path = ROOT / "data" / "golden" / "live_eval.json"
     data = json.loads(path.read_text())

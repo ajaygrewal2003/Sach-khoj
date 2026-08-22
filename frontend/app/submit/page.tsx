@@ -32,14 +32,15 @@ export default function SubmitPage() {
       <div className="wrap">
         <h2>Submit content to verify</h2>
         <p className="lead">
-          Paste a URL, caption text, and/or screenshot. Meta blocks most public post scraping — text
-          and images are the reliable path for Facebook and Instagram.
+          Paste a link to a reel, video, or post (Instagram, Facebook, TikTok, YouTube, X) — the AI
+          downloads it, transcribes the speech, reads the visuals, and fact-checks everything. You
+          can also paste text or upload a video/screenshot directly if a platform blocks the link.
         </p>
 
         <form className="panel form-grid" onSubmit={onSubmit}>
           <label>
-            URL (website, Facebook, or Instagram)
-            <input type="url" name="url" placeholder="https://..." />
+            URL (reel, video, post, or article)
+            <input type="url" name="url" placeholder="https://www.instagram.com/reel/…" />
           </label>
           <label>
             Caption / article text
@@ -58,7 +59,7 @@ export default function SubmitPage() {
             </select>
           </label>
           <label>
-            Screenshot or reel frame (optional)
+            Video or screenshot upload (optional)
             <input type="file" name="media" accept="image/*,video/*" />
           </label>
 

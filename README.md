@@ -1,20 +1,29 @@
 # Sach Khoj (ਸੱਚ ਖੋਜ)
 
-Evidence-grounded validation tool for claims about **Sikhism and Gurbani**. Paste a URL, caption text, or screenshot — the pipeline extracts claims, retrieves passages from BaniDB / GurbaniNow and a curated corpus, then returns verdicts with citations.
+Evidence-grounded validation tool for claims about **Sikhism and Gurbani**. Paste a link to a reel/video/post, caption text, or upload a video/screenshot — the pipeline transcribes and reads the media, extracts claims, retrieves passages from BaniDB / GurbaniNow and a curated corpus, then returns verdicts with citations.
 
 > **Disclaimer:** AI-assisted research tool, not Panthic authority. Consult a Giani / Sangat for religious guidance.
 
 ## Features (MVP)
 
-- Submit URL + text + screenshot/video frame
+- Submit a **link to a reel/video/post** (Instagram, Facebook, TikTok, YouTube, X) — the pipeline downloads the media, transcribes the speech (Whisper), and reads on-screen text/visuals (vision model), then fact-checks everything said and shown
+- Upload a **video or screenshot** directly (guaranteed path when a platform blocks link access)
 - Website article extraction (trafilatura)
-- Facebook/Instagram-aware fallback (paste text / OCR when Meta blocks fetch)
 - Claim extraction (LLM when `OPENAI_API_KEY` is set; heuristic fallback otherwise)
 - Gurbani retrieval via [BaniDB](https://www.banidb.com/) and [GurbaniNow](https://api.gurbaninow.com/)
-- Curated Rehat Maryada / history / known-false index (RAG-style hybrid search)
+- Curated Rehat Maryada / history / known-false index (semantic + hybrid search)
 - Per-claim verdicts: `false | misleading | unverified | true | not_checkable`
 - Shareable case report pages
 - Admin human-review queue for low-confidence results
+
+### Social media links: what to expect
+
+Downloads use yt-dlp with an Open Graph fallback, and every file is validated before analysis. Platforms rate-limit datacenter IPs aggressively; two levers make links reliable:
+
+1. **`SOCIAL_COOKIES_FILE`** — path to a Netscape-format cookies file exported from a logged-in browser session (see yt-dlp's FAQ). This makes Instagram/Facebook/YouTube links work consistently.
+2. **Upload fallback** — if a link is refused, the report tells the user to save/screen-record the post and upload the file; the analysis (transcript + visuals + verdicts) is identical.
+
+Requires `ffmpeg` on the host (`apt install ffmpeg`; included in the Docker image).
 
 ## Quick start (local)
 

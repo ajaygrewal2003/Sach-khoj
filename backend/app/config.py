@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_embed_model: str = "text-embedding-3-small"
+    openai_vision_model: str = ""  # empty -> use openai_model
+    openai_transcribe_model: str = "whisper-1"
     openai_base_url: str = "https://api.openai.com/v1"
     admin_token: str = "dev-admin-token"
     upload_dir: str = "./uploads"
@@ -28,7 +30,13 @@ class Settings(BaseSettings):
     banidb_base_url: str = "https://api.banidb.com/v2"
     gurbaninow_base_url: str = "https://api.gurbaninow.com/v2"
     confidence_review_threshold: float = 0.7
-    max_upload_bytes: int = 15 * 1024 * 1024
+    max_upload_bytes: int = 200 * 1024 * 1024
+    max_media_download_bytes: int = 300 * 1024 * 1024
+    max_video_seconds: int = 900
+    video_frames_to_sample: int = 6
+    # Netscape-format cookies file exported from a logged-in browser session.
+    # Optional; makes Instagram/Facebook downloads far more reliable.
+    social_cookies_file: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:
