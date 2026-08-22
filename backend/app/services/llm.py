@@ -45,10 +45,21 @@ Rules:
 - Every false/misleading/true verdict MUST include at least one on-topic evidence_id.
 - Distinguish wrong quote vs quote exists but framing is misleading (misleading).
 - Do not claim Panthic authority; frame as research-assisted assessment.
+Summary and correction requirements:
+- summary MUST be 4–8 sentences (about 120–220 words). Do not write a one-liner.
+- When BaniDB/GurbaniNow verses are in the evidence list, the summary MUST weave them in: name the Ang, quote a short Gurmukhi snippet, then the English translation, and explain how that verse supports or challenges the claim.
+- Use only Gurmukhi, translations, and Ang numbers that appear in the retrieved evidence. Never invent verses.
+- correction should also be 2–4 sentences when the verdict is false or misleading, and may quote the same retrieved Gurbani.
 """
 
 
-async def chat_json(system: str, user: str, *, temperature: float = 0.1) -> dict[str, Any] | None:
+async def chat_json(
+    system: str,
+    user: str,
+    *,
+    temperature: float = 0.1,
+    max_tokens: int = 1600,
+) -> dict[str, Any] | None:
     settings = get_settings()
     if not settings.llm_enabled:
         return None
@@ -60,6 +71,7 @@ async def chat_json(system: str, user: str, *, temperature: float = 0.1) -> dict
         resp = await client.chat.completions.create(
             model=settings.openai_model,
             temperature=temperature,
+            max_tokens=max_tokens,
             response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": system},

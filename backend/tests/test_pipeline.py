@@ -184,6 +184,28 @@ async def test_form_claim_false_without_llm():
     assert verdict.verdict == "false"
 
 
+def test_explanation_weaves_in_gurbani():
+    from app.pipeline.verify import _ensure_gurbani_in_explanation
+
+    evidence = [
+        {
+            "source": "BaniDB",
+            "reference": "Ang 141",
+            "excerpt": "ਪਹਿਲਾ ਸਚੁ ਹਲਾਲ ਦੁਇ ਤੀਜਾ ਖੈਰ ਖੁਦਾਇ ॥",
+            "translation": "Let the first be truthfulness, the second honest living, and the third charity in the Name of God.",
+        }
+    ]
+    text = _ensure_gurbani_in_explanation(
+        "Sikhi encourages honest work and earning a living through honest means.",
+        "Sikh teachings emphasize honest work.",
+        evidence,
+        "true",
+    )
+    assert "Ang 141" in text
+    assert "honest living" in text.lower()
+    assert "ਪਹਿਲਾ ਸਚੁ" in text
+
+
 def test_golden_set_shapes():
     path = ROOT / "data" / "golden" / "golden_set.json"
     data = json.loads(path.read_text())

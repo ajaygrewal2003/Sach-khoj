@@ -20,9 +20,9 @@ export function VerdictCard({ claim }: { claim: Claim }) {
           Quoted: {claim.quoted_gurbani}
         </p>
       ) : null}
-      <p style={{ marginTop: 0 }}>{claim.summary}</p>
+      <p style={{ marginTop: 0, whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{claim.summary}</p>
       {claim.correction ? (
-        <p>
+        <p style={{ lineHeight: 1.55 }}>
           <strong>Correction:</strong> {claim.correction}
         </p>
       ) : null}
