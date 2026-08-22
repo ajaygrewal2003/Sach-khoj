@@ -40,7 +40,8 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health", response_model=HealthOut)
     async def health() -> HealthOut:
-        return HealthOut(status="ok", llm_enabled=settings.llm_enabled, app=settings.app_name)
+        live = get_settings()
+        return HealthOut(status="ok", llm_enabled=live.llm_enabled, app=live.app_name)
 
     return app
 

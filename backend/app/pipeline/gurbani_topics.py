@@ -261,7 +261,8 @@ async def scripture_queries_for_claim(
     seen = {(q.query.lower(), q.searchtype) for q in queries}
 
     understood = brief or await analyze_claim(claim_text)
-    if understood.gurbani_relevant is False and not queries:
+    # History/politics: do not search Gurbani just because a heuristic noun fired.
+    if understood.gurbani_relevant is False:
         return []
 
     def add(query: str, searchtype: int, topic: str) -> None:

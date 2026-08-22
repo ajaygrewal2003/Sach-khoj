@@ -40,6 +40,8 @@ Return ONLY valid JSON matching:
 }
 Rules:
 - You MUST only cite evidence_ids that appear in the provided evidence list.
+- Verdict true means the USER CLAIM is accurate. If the claim is wrong, overstated, or fabricated, use false or misleading — never true.
+- If a Known False Claims Index row is on-topic, the claim is not true.
 - Cite a passage only if it is about the same topic as the claim. Off-topic passages (wrong subject) are not evidence.
 - If evidence is insufficient or off-topic, use unverified, set evidence_ids to [], and set correction to null. Never guess from model memory.
 - Every false/misleading/true verdict MUST include at least one on-topic evidence_id.

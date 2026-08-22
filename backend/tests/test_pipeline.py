@@ -225,6 +225,17 @@ def test_off_topic_gurbani_is_dropped():
     assert "education" not in hits[0]["meta"]["claim_pattern"].lower()
 
 
+def test_known_false_does_not_match_on_rehat_boilerplate():
+    kb = KnowledgeBase()
+    kb.load(force=True)
+    hits = kb.match_known_false(
+        "A Sikh believes in the ten Gurus and the Guru Granth Sahib according to Rehat Maryada summaries."
+    )
+    patterns = " ".join((h.get("meta") or {}).get("claim_pattern", "") for h in hits).lower()
+    assert "meat" not in patterns
+    assert "vegetarian" not in patterns
+
+
 def test_filler_search_terms_rejected():
     from app.pipeline.relevance import (
         claim_focus_tokens,
@@ -356,6 +367,23 @@ def test_banidb_english_hits_require_whole_words():
     assert not client._english_query_hits("completely", meat_line)
 
 
+@pytest.mark.asyncio
+async def test_scripture_queries_skip_when_gurbani_not_relevant():
+    from app.pipeline.gurbani_topics import scripture_queries_for_claim
+    from app.pipeline.relevance import ClaimBrief
+
+    brief = ClaimBrief(
+        subject="historical origin of the Khalsa",
+        gurbani_relevant=False,
+        llm_queries=[{"q": "warrior", "lang": "en"}],
+        focus_tokens={"khalsa", "british"},
+    )
+    qs = await scripture_queries_for_claim(
+        "The British created the Khalsa in the 19th century.", brief=brief
+    )
+    assert qs == []
+
+
 def test_golden_set_shapes():
     path = ROOT / "data" / "golden" / "golden_set.json"
     data = json.loads(path.read_text())
@@ -369,3 +397,21 @@ def test_golden_set_shapes():
         if ex["type"] != "true_control":
             if evidence and evidence[0].get("source") == "Known False Claims Index":
                 assert verdict.verdict in ex["expected_verdict"]
+
+
+def test_live_eval_fixtures_well_formed():
+    path = ROOT / "data" / "golden" / "live_eval.json"
+    data = json.loads(path.read_text())
+    fixtures = data["fixtures"]
+    assert 22 <= len(fixtures) <= 40
+    ids = [f["id"] for f in fixtures]
+    assert len(ids) == len(set(ids))
+    for fx in fixtures:
+        assert fx["text"]
+        assert fx["expected_verdict"]
+        assert fx["gurbani_expected"] in {"required", "optional", "forbidden"}
+        from app.pipeline.gurbani_topics import scripture_queries_for
+
+        labels = {q.query.lower() for q in scripture_queries_for(fx["text"])}
+        assert "completely" not in labels
+        assert "forbids" not in labels

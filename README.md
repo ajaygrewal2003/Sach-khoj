@@ -93,6 +93,17 @@ pip install -r requirements.txt
 pytest -q
 ```
 
+Live evaluation (BaniDB + OpenAI; scores quote relevance, not just verdicts):
+
+```bash
+cd backend
+unset OPENAI_API_KEY && set -a && source .env && set +a
+python scripts/eval_live.py --http-smoke
+```
+
+Fixtures live in `data/golden/live_eval.json`. A run writes `backend/.eval/last_run.json`.
+
+
 ## Ethical notes
 
 - Prefer user-submitted content over social scraping

@@ -18,5 +18,6 @@ uploads/
 .DS_Store
 coverage/
 htmlcov/
+backend/.eval/
 .turbo/
 *.tsbuildinfo

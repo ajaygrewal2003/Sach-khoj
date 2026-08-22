@@ -53,6 +53,7 @@ SYNONYM_GROUPS: list[set[str]] = [
     {"nitnem", "paath", "path"},
     {"meat", "flesh", "kutha", "jhatka", "vegetarian", "diet", "dietary", "maas"},
     {"honest", "honesty", "kirat", "earning"},
+    {"hate", "hatred", "hateful"},
 ]
 
 
@@ -79,6 +80,7 @@ WEAK_SUBJECT_TOKENS = {
     "lord", "god", "master", "divine", "waheguru", "him", "his", "himself",
     "saved", "fulfilled", "comforted", "meditating", "teaches", "teaching", "taught",
     "claim", "claims", "according", "emphasize", "emphasizes", "people", "religion",
+    "rehat", "maryada", "discipline",
 }
 
 
@@ -267,7 +269,17 @@ class KnowledgeBase:
                     continue
                 jaccard = len(q_tokens & p_tokens) / max(len(q_tokens | p_tokens), 1)
                 fuzzy = fuzz.ratio(claim_text.lower(), pattern.lower()) / 100.0
-                # "Sikhi forbids X" must not match "Sikhism forbids Y".
+                # Shared boilerplate (Rehat Maryada, Sikh, Guru) is not enough.
+                overlap = expand_tokens(core_subject_tokens(claim_text)) & expand_tokens(
+                    core_subject_tokens(pattern)
+                )
+                boilerplate = {
+                    "sikh", "sikhi", "sikhism", "sikhs", "guru", "gurus",
+                    "gurbani", "bani", "rehat", "maryada", "discipline",
+                    "ang", "page", "pageno",
+                }
+                if not (overlap - boilerplate):
+                    continue
                 if core_hit < 1:
                     continue
                 if core_hit < 2 and fuzzy < 0.78:

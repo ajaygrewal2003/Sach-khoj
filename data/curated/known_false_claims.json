@@ -66,8 +66,10 @@
     },
     {
       "id": "kf-009",
-      "claim_pattern": "Gurbani promotes hatred against other communities",
-      "category": "out_of_context",
+      "aliases": [
+        "Gurbani orders hatred of a modern community",
+        "Gurbani tells Sikhs to hate another people"
+      ],
       "explanation": "Selective quoting often strips verses from their spiritual context about ego, tyranny, or devotion.",
       "correction": "Read the full shabad and established translations; Gurbani centers Naam, justice, and universal dignity.",
       "source_refs": ["gurbani:no-hate"]

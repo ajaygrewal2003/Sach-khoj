@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from rapidfuzz import fuzz
@@ -79,6 +80,8 @@ async def _llm_verify(
     cited_ids = [eid for eid in (data.get("evidence_ids") or []) if eid in allowed_ids]
     verdict = _coerce_verdict(data.get("verdict"))
     confidence = _coerce_confidence(data.get("confidence"), default=0.5)
+    summary = (data.get("summary") or "Assessment complete.").strip()
+    verdict = _align_verdict_with_writeup(verdict, summary)
 
     if verdict in {"false", "misleading", "true"} and not cited_ids:
         verdict = "unverified"
@@ -346,6 +349,24 @@ def _to_evidence_item(raw: dict[str, Any]) -> EvidenceItem:
         url=raw.get("url"),
         score=raw.get("score"),
     )
+
+
+def _align_verdict_with_writeup(verdict: VerdictType, summary: str) -> VerdictType:
+    """If the write-up says the claim is wrong, do not leave verdict=true."""
+    if verdict != "true":
+        return verdict
+    head = (summary or "")[:280]
+    if re.search(
+        r"\b(claim that.{0,100}\b(is|are)\s+(inaccurate|incorrect|false|misleading|not\s+supported|not\s+true))\b",
+        head,
+        re.I | re.S,
+    ):
+        return "false"
+    if re.search(r"\bfundamentally\s+(rejects|incorrect|false)\b", head, re.I):
+        return "false"
+    if re.search(r"\b(the claim.{0,40}is\s+misleading)\b", head, re.I):
+        return "misleading"
+    return verdict
 
 
 def _coerce_verdict(value: Any) -> VerdictType:

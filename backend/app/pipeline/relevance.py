@@ -168,8 +168,14 @@ SKIP_AS_SOLO_QUERY = FOCUS_DROP | {
     "creating",
     "century",
     "system",
-    "rejects",
+    "believes",
+    "summaries",
+    "maryada",
     "according",
+    "identity",
+    "prove",
+    "proves",
+    "inherently",
 }
 
 # Ambiguous Gurbani English: the verse must also carry the claim's sense of the word.
