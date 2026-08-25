@@ -20,12 +20,12 @@ async def ocr_image(path: str | Path) -> str:
         return ""
 
     try:
-        image = Image.open(path)
-        # Prefer Punjabi/Gurmukhi + English; fall back to English-only
-        try:
-            text = pytesseract.image_to_string(image, lang="pan+eng")
-        except pytesseract.TesseractError:
-            text = pytesseract.image_to_string(image, lang="eng")
+        with Image.open(path) as image:
+            # Prefer Punjabi/Gurmukhi + English; fall back to English-only
+            try:
+                text = pytesseract.image_to_string(image, lang="pan+eng")
+            except pytesseract.TesseractError:
+                text = pytesseract.image_to_string(image, lang="eng")
         return (text or "").strip()
     except Exception as exc:  # noqa: BLE001
         logger.warning("OCR failed for %s: %s", path, exc)
