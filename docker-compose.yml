@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sachkhoj
+      POSTGRES_PASSWORD: sachkhoj
+      POSTGRES_DB: sachkhoj
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sachkhoj -d sachkhoj"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sachkhoj:sachkhoj@db:5432/sachkhoj
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SOCIAL_COOKIES_FILE: ${SOCIAL_COOKIES_FILE:-}
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
+      UPLOAD_DIR: /app/uploads
+      CURATED_DATA_DIR: /app/data/curated
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-dev-admin-token}
+    volumes:
+      - ./data:/app/data
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:

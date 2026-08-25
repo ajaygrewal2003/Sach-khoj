@@ -1,0 +1,62 @@
+{
+  "source": "Sikh historical reference summaries",
+  "attribution": "Curated educational summaries for retrieval grounding. Cross-check with established Sikh historical works and primary sources.",
+  "chunks": [
+    {
+      "id": "hist:nanak",
+      "category": "history",
+      "tags": ["history", "guru nanak"],
+      "reference": "Guru Nanak Dev Ji — overview",
+      "excerpt": "Guru Nanak Dev Ji (1469–1539) founded the Sikh panth, teaching Ik Onkar, rejection of empty ritualism, and equality. He was not a reformer who merely remained within another tradition as a subordinate sect; Sikh tradition understands his revelation as establishing a distinct spiritual path."
+    },
+    {
+      "id": "hist:gurus",
+      "category": "history",
+      "tags": ["history", "ten gurus"],
+      "reference": "Ten Sikh Gurus",
+      "excerpt": "There are ten human Gurus from Guru Nanak Dev Ji to Guru Gobind Singh Ji, followed by the eternal Guru Granth Sahib. Claims inventing additional Gurus, denying Gobind Singh Ji's Guruship, or asserting the line ended earlier are historically false within Sikh tradition."
+    },
+    {
+      "id": "hist:khalsa",
+      "category": "history",
+      "tags": ["history", "khalsa", "vaisakhi"],
+      "reference": "Birth of the Khalsa (1699)",
+      "excerpt": "Guru Gobind Singh Ji initiated the Khalsa on Vaisakhi 1699 at Anandpur Sahib with the Panj Pyare. The Khalsa was not created by the British. British colonial encounters with Sikhs occurred centuries later."
+    },
+    {
+      "id": "hist:sggs",
+      "category": "history",
+      "tags": ["history", "guru granth sahib", "adigranth"],
+      "reference": "Compilation of Guru Granth Sahib",
+      "excerpt": "Guru Arjan Dev Ji compiled the Adi Granth in 1604. Guru Gobind Singh Ji later added Guru Tegh Bahadur Ji's bani and conferred Guruship on the Granth. Fabricated 'lost volumes' or fake Ang citations are common misinformation patterns."
+    },
+    {
+      "id": "hist:not-hindu-sect",
+      "category": "history",
+      "tags": ["history", "propaganda", "identity"],
+      "reference": "Sikh distinct identity",
+      "excerpt": "Sikhism is a distinct revealed tradition with its own scripture, initiation, and institutions. Reducing Sikhs to a 'Hindu sect' or claiming Sikh identity was invented solely under colonial policy erases Guru-period sources and Sikh self-understanding."
+    },
+    {
+      "id": "hist:1984",
+      "category": "history",
+      "tags": ["history", "1984"],
+      "reference": "1984 — careful framing",
+      "excerpt": "1984 includes Operation Blue Star and the anti-Sikh violence of November 1984. Accurate discussion requires careful sourcing. Conspiratorial claims that erase documented civilian suffering, or that invent false Guru-era prophecies about 1984, should be treated as unverified or misleading without primary evidence."
+    },
+    {
+      "id": "hist:punjabi-language",
+      "category": "history",
+      "tags": ["history", "gurmukhi"],
+      "reference": "Gurmukhi script",
+      "excerpt": "Gurmukhi was standardized and promoted through the Sikh Gurus' tradition, especially under Guru Angad Dev Ji. Claims that Gurbani was originally written only in another unrelated script and later fabricated in Gurmukhi are not supported by Sikh textual history."
+    },
+    {
+      "id": "hist:women",
+      "category": "history",
+      "tags": ["history", "equality", "women"],
+      "reference": "Women in Sikh tradition",
+      "excerpt": "Sikh teaching affirms spiritual equality of women and men. Historical practices of equality have varied socially, but claims that Gurbani or Guru Gobind Singh Ji barred women from Amrit or sangat contradict mainstream Sikh doctrine and Rehat understanding."
+    }
+  ]
+}

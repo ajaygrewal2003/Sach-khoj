@@ -1,0 +1,309 @@
+{
+  "rubric": {
+    "filler_patterns": [
+      "saved me completely",
+      "completely fulfilled",
+      "totally, completely fulfilled",
+      "comforted by meditating"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "d-meat-ban",
+      "bucket": "doctrine",
+      "text": "Sikhi completely forbids eating meat.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["meat", "flesh", "eat", "kutha", "vegetarian"],
+      "must_not_quote": ["saved me completely", "completely fulfilled"],
+      "forbidden_evidence": ["forbids education", "modern medicine"]
+    },
+    {
+      "id": "d-caste-complete",
+      "bucket": "doctrine",
+      "text": "Sikhi completely rejects any teaching against caste; the Gurus supported caste hierarchy.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["caste"],
+      "must_not_quote": ["saved me completely", "completely fulfilled"],
+      "forbidden_evidence": ["forbids education"]
+    },
+    {
+      "id": "d-form-physical",
+      "bucket": "doctrine",
+      "text": "Sikhi teaches that God can only be worshipped in one specific physical form.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["formless", "form", "idol", "nirankar", "image"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "d-ritual-mukti",
+      "bucket": "doctrine",
+      "text": "Sikhi teaches that rituals alone can guarantee spiritual liberation.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["ritual", "naam", "mukti", "liberation", "pilgrimage", "fasting"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "d-tirath-bath",
+      "bucket": "doctrine",
+      "text": "Bathing at a holy river automatically washes sins and grants mukti in Sikhism.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["pilgrimage", "bathing", "tirath", "mukti", "sins", "naam"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "d-nitnem-magic",
+      "bucket": "doctrine",
+      "text": "Doing Nitnem or taking Amrit automatically guarantees heaven no matter how one lives.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["nitnem", "amrit", "heaven", "naam", "discipline"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "r-langar-closed",
+      "bucket": "rehat",
+      "text": "Langar is only for baptized Sikhs; foreigners are not allowed.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["langar", "foreign", "hungry", "food", "kitchen"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "r-five-ks-british",
+      "bucket": "rehat",
+      "text": "The Five Ks were invented by the British colonial army.",
+      "expected_verdict": ["false"],
+      "gurbani_expected": "forbidden",
+      "must_match": [],
+      "must_not_quote": ["saved me completely"],
+      "forbidden_evidence": ["forbids eating meat", "vegetarian"]
+    },
+    {
+      "id": "r-women-amrit",
+      "bucket": "rehat",
+      "text": "Women cannot take Amrit according to the Gurus.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["woman", "women", "amrit", "equal"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "r-kutha-nuance",
+      "bucket": "rehat",
+      "text": "Sikh Rehat Maryada makes vegetarianism compulsory for all Sikhs.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["kutha", "meat", "vegetarian", "rehat", "halal"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "h-british-khalsa",
+      "bucket": "historical",
+      "text": "The British created the Khalsa in the 19th century to divide Indians.",
+      "expected_verdict": ["false"],
+      "gurbani_expected": "forbidden",
+      "must_match": [],
+      "must_not_quote": ["saved me completely"],
+      "forbidden_evidence": ["forbids eating meat", "vegetarian"]
+    },
+    {
+      "id": "h-nanak-fiction",
+      "bucket": "historical",
+      "text": "Guru Nanak Dev Ji never existed and is a fictional character.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "forbidden",
+      "must_match": [],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "h-hindu-sect",
+      "bucket": "historical",
+      "text": "Sikhs are just a Hindu sect and not a separate religion.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["hindu", "sect", "religion", "distinct", "panth"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "p-1984-doctrine",
+      "bucket": "propaganda",
+      "text": "Operation Blue Star proves Sikhism is inherently violent.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "forbidden",
+      "must_match": [],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "p-kirpan-civilians",
+      "bucket": "propaganda",
+      "text": "Kirpan is proof that Sikhism mandates attacking civilians.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["kirpan", "kakaar", "faith", "civilian", "attack"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "p-education-ban",
+      "bucket": "propaganda",
+      "text": "Sikhism forbids education and modern medicine according to Gurbani.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["education", "medicine", "learning"],
+      "must_not_quote": ["saved me completely"],
+      "forbidden_evidence": ["forbids eating meat", "vegetarianism compulsory"]
+    },
+    {
+      "id": "g-ang-2000",
+      "bucket": "gurbani_misquote",
+      "text": "Guru Nanak said on Ang 2000 that Sikhs must abandon Gurmukhi forever.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["1430", "ang", "gurmukhi", "2000"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "g-mul-mantar-fake",
+      "bucket": "gurbani_misquote",
+      "text": "This viral post claims a political slogan is the real Mul Mantar from Ang 1 of Guru Granth Sahib.",
+      "expected_verdict": ["false", "misleading", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["mul", "mantar", "ang 1", "onkar"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "o-hate-caption",
+      "bucket": "out_of_context",
+      "text": "A real-looking Gurbani line is posted with a caption saying Gurbani orders hatred of an entire modern community.",
+      "expected_verdict": ["misleading", "false", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["hatred", "hate", "context", "shabad", "love", "unity", "light", "community"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "t-eternal-guru",
+      "bucket": "true_control",
+      "text": "Guru Gobind Singh Ji conferred eternal Guruship on the Guru Granth Sahib.",
+      "expected_verdict": ["true", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["granth", "guruship", "gobind"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "t-ten-gurus",
+      "bucket": "true_control",
+      "text": "A Sikh believes in the ten Gurus and the Guru Granth Sahib according to Rehat Maryada summaries.",
+      "expected_verdict": ["true", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["ten", "gurus", "granth", "rehat"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "n-dancing-weddings",
+      "bucket": "novel",
+      "text": "Sikhism forbids dancing at weddings.",
+      "expected_verdict": ["unverified", "false", "misleading", "not_checkable"],
+      "gurbani_expected": "optional",
+      "must_match": ["danc", "wedding", "anand"],
+      "must_not_quote": ["saved me completely", "completely fulfilled"]
+    },
+    {
+      "id": "n-multi-post",
+      "bucket": "novel",
+      "mode": "extract",
+      "text": "The British created the Khalsa in the 19th century. Also Sikhi completely forbids eating meat.",
+      "expected_verdict": ["false", "misleading"],
+      "min_claims": 2,
+      "gurbani_expected": "optional",
+      "must_match": ["khalsa", "meat", "british"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "g-named-ang-1",
+      "bucket": "gurbani_misquote",
+      "text": "On Ang 1 Gurbani opens with Ik Onkar: ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ",
+      "quoted_gurbani": "ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ",
+      "expected_verdict": ["true", "unverified", "misleading"],
+      "gurbani_expected": "required",
+      "must_match": ["onkar", "naam", "creator", "truth", "ਸਤਿ", "ੴ"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "d-janeu-required",
+      "bucket": "doctrine",
+      "text": "Wearing a janeu or performing priestly purity rituals is required for Sikh liberation.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["janeu", "caste", "ritual", "thread", "purity"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "d-idols-gurus",
+      "bucket": "rehat",
+      "text": "Sikhs worship idols and statues of the Gurus as deities.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["idol", "statue", "formless", "worship"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "w-alcohol-forbidden",
+      "bucket": "novel",
+      "text": "Sikhi forbids alcohol because alcohol is spiritually harmful.",
+      "expected_verdict": ["true", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["intoxic", "alcohol", "wine", "liquor", "tobacco", "drunk"],
+      "must_not_quote": ["saved me completely"],
+      "forbidden_evidence": ["kutha (meat killed in the muslim ritual manner) for amritdhari sikhs. it does not declare"]
+    },
+    {
+      "id": "w-alcohol-acceptable",
+      "bucket": "novel",
+      "text": "Drinking alcohol is perfectly acceptable and encouraged in Sikhi.",
+      "expected_verdict": ["false", "misleading"],
+      "gurbani_expected": "optional",
+      "must_match": ["intoxic", "alcohol", "wine", "liquor", "drunk"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "w-nanak-1469",
+      "bucket": "true_control",
+      "text": "Guru Nanak Dev Ji was born in 1469.",
+      "expected_verdict": ["true", "unverified"],
+      "gurbani_expected": "forbidden",
+      "must_match": [],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "w-ramadan-fast",
+      "bucket": "novel",
+      "text": "Sikhs are required to fast during Ramadan.",
+      "expected_verdict": ["false", "misleading", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["fast", "ramadan", "ritual"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "w-kaur-surname",
+      "bucket": "novel",
+      "text": "Sikh women must legally change their surname to Kaur after marriage or they are not Sikh.",
+      "expected_verdict": ["false", "misleading", "unverified", "not_checkable"],
+      "gurbani_expected": "optional",
+      "must_match": ["kaur", "name", "woman", "women", "identity"],
+      "must_not_quote": ["saved me completely"]
+    },
+    {
+      "id": "w-bhagat-kabir",
+      "bucket": "true_control",
+      "text": "The Guru Granth Sahib includes hymns by Bhagat Kabir and other non-Sikh saints.",
+      "expected_verdict": ["true", "unverified"],
+      "gurbani_expected": "optional",
+      "must_match": ["kabir", "bhagat", "saint", "hymn"],
+      "must_not_quote": ["saved me completely"]
+    }
+  ]
+}
