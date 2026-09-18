@@ -577,11 +577,22 @@ Next.js app in `frontend/`:
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page |
+| `/` | Landing page written for Sangat (non-technical): why it exists, how it works in three steps, a sample report, and the tool's commitments |
 | `/submit` | Submission form (URL, text, language hint, file upload) |
 | `/cases/[id]` | Case report with live polling during processing |
+| `/about` | Plain-language explanation of the pipeline |
+| `/review` | Sangat (human) review queue, admin token required |
 
-The case page shows a three-step progress indicator (Ingest → Retrieve → Verify) while status is `pending` or `processing`, then renders `VerdictCard` components per claim with evidence citations. Extracted text and pipeline log are available in collapsible sections.
+The case page shows a three-step progress indicator (Reading → Searching → Writing) while status is `pending` or `processing`, then an overall verdict panel and `VerdictCard` components per claim with evidence citations. Extracted text is available in a collapsible section.
+
+### Theme
+
+The UI uses a Sikhi / Gurbani visual language defined in `frontend/app/globals.css`:
+
+- **Palette:** parchment (pothi paper) background, kesri saffron for primary actions, surmai navy for headings and the values band, gold-leaf accents, and a subtle phulkari lattice behind the page.
+- **Typography:** Fraunces for display, Literata for body, and Mukta Mahee for Gurmukhi (loaded through `next/font/google`). Anything in Gurmukhi gets the `.gurmukhi` class so it renders in a proper Gurmukhi face.
+- **Marks:** Ik Onkar (ੴ) as the brand emblem and favicon (`app/icon.svg`), and a Khanda SVG component (`components/Khanda.tsx`) in the footer.
+- **Gurbani on the landing page:** Ang 953 (ਕੂੜੁ ਨਿਖੁਟੇ ਨਾਨਕਾ ਓੜਕਿ ਸਚਿ ਰਹੀ ॥) and Ang 62 (ਸਚਹੁ ਓਰੈ ਸਭੁ ਕੋ ਉਪਰਿ ਸਚੁ ਆਚਾਰੁ ॥). The sample report uses Ang 473 (Asa Ki Vaar) as a misattribution example.
 
 API base URL: `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`).
 

@@ -29,50 +29,65 @@ export default function SubmitPage() {
 
   return (
     <section className="section">
-      <div className="wrap">
-        <h2>Submit content to verify</h2>
+      <div className="wrap narrow">
+        <p className="eyebrow">Check a post</p>
+        <h2>
+          What did you see? <em>Bring it here.</em>
+        </h2>
         <p className="lead">
-          Paste a link to a reel, video, or post (Instagram, Facebook, TikTok, YouTube, X) — the AI
-          downloads it, transcribes the speech, reads the visuals, and fact-checks everything. You
-          can also paste text or upload a video/screenshot directly if a platform blocks the link.
+          Paste a link to a reel, video or post, or the text of a forward. If a platform blocks the
+          link, upload a screen recording or screenshot instead. Sach Khoj will listen, read, and
+          check every claim against Gurbani and trusted sources.
         </p>
 
-        <form className="panel form-grid" onSubmit={onSubmit}>
+        <form className="panel panel-kesri form-grid" onSubmit={onSubmit}>
           <label>
-            URL (reel, video, post, or article)
+            Link to the reel, video, post or article
             <input type="url" name="url" placeholder="https://www.instagram.com/reel/…" />
+            <span className="hint">Instagram, TikTok, YouTube, Facebook, X, or any article.</span>
           </label>
+
+          <div className="or-divider">or</div>
+
           <label>
-            Caption / article text
+            Paste the caption, forward, or claim
             <textarea
               name="text"
-              placeholder="Paste the claim, caption, or article excerpt here…"
+              placeholder="e.g. “Guru Nanak Dev Ji said that…” — paste the words as you saw them."
               required={false}
             />
           </label>
+
           <label>
-            Language hint
+            Upload a screenshot or video (optional)
+            <input type="file" name="media" accept="image/*,video/*" />
+            <span className="hint">Useful when a reel cannot be opened from the link.</span>
+          </label>
+
+          <label>
+            Language of the content
             <select name="language_hint" defaultValue="auto">
-              <option value="auto">Auto</option>
-              <option value="gurmukhi">Gurmukhi</option>
+              <option value="auto">Let Sach Khoj detect it</option>
+              <option value="gurmukhi">Punjabi (Gurmukhi)</option>
               <option value="english">English</option>
             </select>
           </label>
-          <label>
-            Video or screenshot upload (optional)
-            <input type="file" name="media" accept="image/*,video/*" />
-          </label>
 
-          {error ? <p style={{ color: "var(--danger)" }}>{error}</p> : null}
+          {error ? <p className="form-error">{error}</p> : null}
 
-          <button className="btn btn-primary" type="submit" disabled={pending}>
-            {pending ? "Submitting…" : "Run verification"}
-          </button>
+          <div className="cta-row">
+            <button className="btn btn-primary btn-lg" type="submit" disabled={pending}>
+              {pending ? "Sending…" : "Check this"}
+            </button>
+            <span className="muted" style={{ fontSize: "0.9rem" }}>
+              Usually takes under a minute.
+            </span>
+          </div>
         </form>
 
         <div className="disclaimer">
-          AI-assisted research tool, not Panthic authority. Low-confidence results are queued for
-          human review.
+          Sach Khoj is an AI-assisted research tool, not Panthic authority. Where it is unsure, the
+          case is sent to Sangat for human review rather than treated as settled.
         </div>
       </div>
     </section>
