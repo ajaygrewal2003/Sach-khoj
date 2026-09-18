@@ -1,0 +1,85 @@
+{
+  "source": "Sikh doctrine & theology summaries",
+  "attribution": "Educational summaries of mainstream Sikh teaching for retrieval grounding. Cross-check Gurbani wording via BaniDB / Guru Granth Sahib Ji. Not a substitute for a Giani.",
+  "chunks": [
+    {
+      "id": "theo:rituals-not-mukti",
+      "category": "doctrine",
+      "tags": ["doctrine", "ritual", "mukti", "naam", "karam"],
+      "keywords": [
+        "ritual", "rituals", "ceremony", "ceremonies", "karam", "karmakand",
+        "liberation", "mukti", "moksha", "salvation", "guarantee", "alone",
+        "outer", "formalism", "tirath", "pilgrimage", "fasting"
+      ],
+      "reference": "Empty ritual does not confer mukti",
+      "excerpt": "Mainstream Sikh teaching does not hold that rituals alone can guarantee spiritual liberation. Guru Nanak Dev Ji criticised empty outer religion (karam kand): bathing at pilgrimage sites, ritual fasting, sacred threads, and similar forms do not by themselves wash the mind or grant mukti. Liberation is linked to Naam, living in Hukam, ethical life, and Guru's grace (Gur Prasad)—not a transactional ceremony."
+    },
+    {
+      "id": "theo:naam-kirat-vand",
+      "category": "doctrine",
+      "tags": ["doctrine", "naam", "kirat", "vand"],
+      "keywords": ["naam", "japna", "kirat", "karni", "vand", "chakna", "three pillars", "devotion", "honest work"],
+      "reference": "Naam Japna, Kirat Karni, Vand Chakna",
+      "excerpt": "A widely taught summary of Sikh life is Naam Japna (remembrance of the Divine), Kirat Karni (honest work), and Vand Chakna (sharing). These are a way of living, not a claim that any single outer ritual automatically guarantees heaven or liberation."
+    },
+    {
+      "id": "theo:japji-hukam",
+      "category": "doctrine",
+      "tags": ["doctrine", "japji", "hukam", "grace"],
+      "keywords": ["japji", "hukam", "nadar", "gurprasad", "grace", "listening", "believing", "mukti"],
+      "reference": "Japji Sahib — Hukam and grace",
+      "excerpt": "Japji Sahib teaches walking in Hukam (Divine Order) and receiving grace; the Mul Mantar ends with Gur Prasad. Mechanical repetition of rites without inner transformation is not presented as a sufficient cause of liberation. Claims that 'doing the ritual is enough' oversimplify and distort this teaching."
+    },
+    {
+      "id": "theo:inner-tirath",
+      "category": "doctrine",
+      "tags": ["doctrine", "pilgrimage", "tirath"],
+      "keywords": ["pilgrimage", "tirath", "teerath", "bathing", "ganges", "holy water", "wash sins"],
+      "reference": "Pilgrimage and inner bathing",
+      "excerpt": "Gurbani repeatedly turns the image of tirath (pilgrimage bathing) inward: cleansing the mind of ego is what matters. Visiting a shrine or bathing in a river is not taught as an automatic guarantee that sins are washed or that mukti is secured."
+    },
+    {
+      "id": "theo:nitnem-discipline",
+      "category": "doctrine",
+      "tags": ["doctrine", "rehat", "nitnem", "discipline"],
+      "keywords": ["nitnem", "paath", "bani", "discipline", "rehat", "practice", "not magic"],
+      "reference": "Nitnem and Rehat as discipline, not magic",
+      "excerpt": "Daily Nitnem, Amrit, and Rehat are spiritual discipline and identity, not a vending-machine ritual that guarantees liberation regardless of conduct. Treating paath or amrit as a charm that works without Naam, humility, and ethical living misrepresents Sikhi."
+    },
+    {
+      "id": "theo:idol-and-form",
+      "category": "doctrine",
+      "tags": ["doctrine", "idol", "form"],
+      "keywords": ["idol", "murti", "statue", "form worship", "ik onkar"],
+      "reference": "Ik Onkar over empty form-worship",
+      "excerpt": "Sikh teaching centres Ik Onkar and the Guru Granth Sahib. Performing form-worship or treating images as conferring salvation contradicts mainstream Rehat and Gurbani's critique of empty ritual display."
+    },
+    {
+      "id": "theo:karma-not-fatalism",
+      "category": "doctrine",
+      "tags": ["doctrine", "karma", "nadar"],
+      "keywords": ["karma", "karam", "fate", "grace", "nadar", "effort"],
+      "reference": "Karam and grace",
+      "excerpt": "Sikh teaching acknowledges karam (actions) but does not reduce liberation to a ledger of ceremonies. Nadar (grace) and Naam are central; neither fatalism nor ritual bargaining captures Guru Nanak's path."
+    },
+    {
+      "id": "theo:caste-ritual-purity",
+      "category": "doctrine",
+      "tags": ["doctrine", "caste", "purity"],
+      "keywords": ["ritual purity", "caste", "janeu", "sacred thread", "pollution"],
+      "reference": "No caste ritual-purity path to God",
+      "excerpt": "Guru Nanak rejected the idea that caste status or purity rituals (such as the janeu) determine spiritual worth. Liberation is not reserved by birth or unlocked by priestly ceremony."
+    },
+    {
+      "id": "theo:nirankar-not-one-form",
+      "category": "doctrine",
+      "tags": ["doctrine", "nirankar", "form", "idol", "ik onkar"],
+      "keywords": [
+        "form", "physical", "idol", "murti", "statue", "nirankar", "formless",
+        "worship", "worshipped", "god", "image", "ik onkar"
+      ],
+      "reference": "Ik Onkar is not confined to one physical form",
+      "excerpt": "Sikh teaching names God as Ik Onkar and Nirankar — the One, without form. Gurbani does not teach that the Divine can only be worshipped in one specific physical image or idol. Devotion is through Naam and the Guru, not by limiting God to a single murti or bodily form."
+    }
+  ]
+}
